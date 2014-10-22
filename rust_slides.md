@@ -1294,11 +1294,107 @@ fn main() {
 
 ---
 
-# Mutable Iterators
+# Iterators of Many Flavors
+
+```rust
+use std::collections::HashMap;
+use std::collections::PriorityQueue;
+
+fn main() {
+  let mut map: HashMap<String, u8> = HashMap::new();
+  let mut queue: PriorityQueue<u8> = PriorityQueue::new();
+
+  for n in range(0u, 10) {
+    map.insert(n.to_string(), std::rand::random());
+    queue.push(std::rand::random());
+  }
+
+  for (k,v) in map.iter() { println!("Map Item: {} => {}", k, v) }
+  for i in queue.iter() { println!("Queue Item: {}", i) }
+}
+```
 
 ^
-- interesting side effect of these ownership mutability rules
-- slice and dice your own needs
+- very different structures
+- expected unordered hash traversal
+- expected priority-order queue traversal
+
+---
+
+# Iterator Traversal
+
+```bash
+$ rustc iterator_flavors.rs && ./iterator_flavors
+Map Item: 7 => 247
+Map Item: 9 => 235
+Map Item: 2 => 52
+Map Item: 0 => 117
+Map Item: 1 => 66
+Map Item: 8 => 191
+Map Item: 4 => 60
+Map Item: 3 => 133
+Map Item: 5 => 220
+Map Item: 6 => 89
+Queue Item: 225
+Queue Item: 218
+Queue Item: 198
+Queue Item: 184
+Queue Item: 46
+Queue Item: 4
+Queue Item: 33
+Queue Item: 17
+Queue Item: 83
+Queue Item: 44
+```
+
+![left](./images/alex-table-flip.gif)
+
+^
+- reasonable explanation?
+- someone even documented this behavior
+- it should at least provide a priority_iter()
+- turns out not *everything* is caught at compile time
+- you can collect it into a sorted vector
+
+---
+
+# Common Traits
+
+- `std::ops::*`
+- `Show: to_string()`
+- `Eq: ==`
+- `PartialEq: eq(), ne()`
+- `Equiv: equiv()`
+- `Ord: cmp()`
+- `PartialOrd: >=, <=, >, <`
+- `Num, One, Zero, Float, Integer`
+- `Deref: unary *`
+
+![right](./images/std_ops.png)
+
+^
+- many, many std lib traits
+- many of these are on most built-ins
+- used to implement operators
+- std::ops
+- properties to rely on
+- deref works on custom wrappers
+
+---
+
+# Kinds
+
+- `Copy`: memcpy friendly `.clone()`
+- `Sized`: compile-time sized
+- `Sync`: threadsafe
+- `Send`: cross task boundary
+
+![](./images/schematic.jpg)
+
+^
+- used by compiler to enforce rules
+- marker traits
+- cross task boundary? 
 
 ---
 
@@ -1314,6 +1410,7 @@ fn main() {
 
   let data = rx.recv();
   println!("{}", data);
+  // 1x => Data produced in child task
 }
 ```
 
@@ -1321,30 +1418,237 @@ fn main() {
 - rust concurrency is in libs, not the language
 - relies on safe memory ownership guarantees
 - transmit/receive, telecom
-- proc is a special closure
 - channels are aync 1-way communication
+- proc is a special closure
+
+---
+
+# Procs
+
+```rust
+fn main() {
+  let (tx, rx) = channel();
+
+  for task_num in range(0u, 10) {
+    let tx = tx.clone();  // => must copy transmitter before sending
+    spawn(proc() {
+      tx.send("Data produced in child task");
+    });
+  }
+
+  for _ in range(0u, 10) {
+    let data = rx.recv();
+    println!("{}", data);
+  }
+  // 10x => Data produced in child task
+}
+```
+
+^
+- special closures
+- procs own their memory
+- ie. ownership is moved
+- common answer is clone()
+- many tx, one rx
+
+---
+
+# Big Data Syncs!
+
+```rust
+use std::sync::Arc;       // => foreshadowing...
+
+#[deriving(Show)]
+struct HugeStruct {
+  huge_name: String
+}
+
+impl HugeStruct {
+  fn new() -> HugeStruct {
+    HugeStruct { huge_name: "I'M HUGE".to_string() }
+  }
+}
+```
+
+^
+- but if we copy everything we want to share...
+- pushing the limits of code slides
+- i want a way to avoid needlessly copying large objects
+- this is very, very handy
 
 ---
 
 # Shared Immutable Memory
 
-Enter Arc.
+```rust
+fn main() {
+  let (tx, rx) = channel();
+  let huge_struct = Arc::new(HugeStruct::new());
 
+  for task_num in range(0u, 10) {
+    let tx = tx.clone();
+    let huge_struct = huge_struct.clone();
+    spawn(proc() {
+      let msg = format!("Task {}: Accessed {}", task_num, huge_struct.huge_name);
+      tx.send(msg);
+    });
+  }
+  drop(tx); // => force last transmitter to hang up
 
+  for data in rx.iter() {
+    println!("{}", data); // 10x => Task N: Accessed I'M HUGE
+  }
+}
+```
+
+^
+- atomic read/write access
+- cloning Arcs is cheap
+- increment internal counter
+- interesting: auto-deref
+- locking, less than ideal
+- Rc for non-atomic ops
 
 ---
 
-![](./images/ram4.jpg)
+# JSON Serialization
+
+```rust
+extern crate serialize;
+use serialize::json::{Json, ToJson, Object};
+use std::collections::TreeMap;
+
+#[deriving(Show)]
+struct User {
+  id: u64,
+  name: String,
+  friends: Vec<u64>
+}
+
+```
 
 ^
-- random access memory
+- how does a static language do json?
+- enums!
 
 ---
 
-![](./images/ram3.jpg)
+# ToJson
+
+```rust
+impl ToJson for User {
+  fn to_json(&self) -> Json {
+    let mut map = TreeMap::new();
+    map.insert("id".to_string(), self.id.to_json());
+    map.insert("name".to_string(), self.name.to_json());
+    map.insert("friends".to_string(), self.friends.to_json());
+    Object(map)   // => enum value for Json type
+  }
+}
+```
+
+---
+
+# Json Output
+
+```rust
+fn main() {
+  let brenda = User {
+    id: 1,
+    name: "BrendaTheSuccessfulDieter".to_string(),
+    friends: vec![4,47,92]
+  };
+
+  println!("brenda.show(): \n{}\n", brenda);
+  println!("brenda.to_json(): \n{}", brenda.to_json());
+}
+```
+
+```
+~ rustc verbose_json.rs && ./verbose_json
+brenda.show():
+User { id: 1, name: BrendaTheSuccessfulDieter, friends: [4, 47, 92] }
+
+brenda.to_json():
+{"friends":[4,47,92],"id":1,"name":"BrendaTheSuccessfulDieter"}
+```
+
+---
+
+# Json Deriving!
+
+```rust
+extern crate serialize;
+use serialize::json;
+
+#[deriving(Show,Encodable)]
+struct User {
+  id: u64,
+  name: String,
+  friends: Vec<u64>
+}
+
+fn main() {
+  let brenda = User {
+    id: 1,
+    name: "BrendaTheSuccessfulDieter".to_string(),
+    friends: vec![4,47,92]
+  };
+
+  println!("brenda.show(): \n{}\n", brenda);
+  println!("brenda.to_json(): \n{}", json::encode(&brenda));
+}
+```
+
+---
+
+# Decoding Json
+
+```rust
+#[deriving(Show,Encodable,Decodable)]
+struct User {
+*snip*
+```
+# Completely ran out of time last night...
+
+---
+
+# Official Documentation
+
+- http://www.rust-lang.org
+- http://doc.rust-lang.org
+- http://doc.rust-lang.org/std/
+- cargo doc
+- Dash! (stable versions)
+
+---
+
+# Unofficial Documentation
+
+- http://rustbyexample.com/
+- http://www.rustforrubyists.com/
+- https://aturon.github.io/
+
+---
+
+![](./images/play.rust.png)
 
 ^
-- random access memory
+- interactive
+- nice for short tests
+- integration with irc room
+
+---
+
+![](./images/trending_repos.png)
+
+^
+- rustc & servo
+- cargo
+- iron
+- nes emulator
+
+---
 
 Attributions
 
@@ -1372,10 +1676,7 @@ struct2.jpg https://secure.flickr.com/photos/zigazou76/7670875192/
 green_stoplight.jpg https://secure.flickr.com/photos/jstanphoto/4744085931/
 ie6_acid2.png "Ieacid2" by Acid2 Task Force - https://commons.wikimedia.org/wiki/File:Ieacid2.png#mediaviewer/File:Ieacid2.png
 i67_acid2.png "Ie7acid2" by Acid2 Task Force - https://commons.wikimedia.org/wiki/File:Ie7acid2.png#mediaviewer/File:Ie7acid2.png
-memory.jpg https://secure.flickr.com/photos/jurvetson/4480203/
 memory2.jpg https://secure.flickr.com/photos/jurvetson/1130981
-ram.jpg https://secure.flickr.com/photos/redjar/480729779/
 ram2.jpg https://secure.flickr.com/photos/isherwoodchris/6917253693/
-ram3.jpg https://secure.flickr.com/photos/davesoldano/12439466344
-ram4.jpg https://secure.flickr.com/photos/chryslergroup/5680832163
 brain.png https://secure.flickr.com/photos/125992663@N02/14597738221
+schematic.jpg https://secure.flickr.com/photos/zdepth/8227198392/

@@ -58,15 +58,15 @@
 + Ownership
 + Strings
 + Slices
-- Iterators
-- Tasks
-- Common Traits (kinds)
-- Rc & Arc
-- JSON Serialization
++ Iterators
++ Common Traits & Kinds
++ Tasks
+  + Arc
+~ JSON Serialization
 - FFI & Unsafe
-- Documentation
-- Popular Projects on Github
-- Resources/Tutorials/Guides/play.rustlang.org
++ Documentation
++ Popular Projects on Github
++ Resources/Tutorials/Guides/play.rustlang.org
 - Macros
   - They exist.
   - Better than C Macros.
@@ -76,8 +76,6 @@
 - rand::*
 - Implementing PartialEq, PartialOrd on Point
 
-- Resource Acquisition Is Initialization (1984, Bjarne Stroustrup, 5 years too late!)
-
 + note that Option is already defined
 ~ more match
   - exhaustive
@@ -85,6 +83,24 @@
   + contains
   + value of pi
 
+1.0
+- low level power & flexibility
+- high level safety & convenience
+
+
+- amazing amount of smart people paid by mozilla to think about hard problems ruby ignores
+
+Nitty Gritty Memory
+- oh yeah, structs are groups of memory, without overhead.
+  - Struct { x: i32 } => 4 bytes. that's it.
+- when i declare stuff, which things are stack vs heap allocated?
+  - args & locals => stack
+  - box => heap
+- what data is stored in a pointer?
+- what happens when i create a reference pointer?
+- what happens when i dereference a pointer?
+- what data is actually stored in an Enum?
+- what happens when i match on an Option?
 
 
 - Our Lens

@@ -1,0 +1,26 @@
+Title:
+
+Rust or: How I Learned to Stop Worrying and Love the Compiler
+
+
+Abstract:
+
+Dynamic languages promise infinite flexibility, but at what cost? Tired of bugs that are only discovered at runtime, after being shipped to production? Your users are.
+
+Learn how Rust balances speed and safety by learning from the mistakes of 50 years of computer science history. Safety and flexibility are not incompatible goals. High level APIs and JSON parsing are not limited to dynamic languages written 20 years ago.
+
+Rust 1.0 is hot off the presses. Jump start your skills by learning everything you need to know in order to start producing production ready Rust binaries.
+
+*No previous exposure to Rust required.*
+
+
+Reviewer Notes:
+
+It should be noted, that Rust 1.0 is projected to be released before the end of the year. As with all estimates, this is basically prophecy. It may or may not be released by Code Mash. Luckily, the language has been stabilizing for months and the workshop can simply use the pre-1.0 builds.
+
+Given that most people will not be previously exposed to the language, the workshop assumes only prior programming experience. We will build up from fundamentals, to highlighting unique features of Rust, to collectively building a sample project.
+
+My professional background is largely Ruby. Rust has piqued my interest by solving many problems caused by Ruby, without losing much of the modern developer focused interface. I've presented much of the material that will be included in the talk, broken over multiple parts, but I am still working on the sample project.
+
+"Fantastic pair of lunch-and-learn presentations on the Rust programming language this week by @Saterus" - @mikedoel https://twitter.com/mikedoel/status/502865221648941056
+
