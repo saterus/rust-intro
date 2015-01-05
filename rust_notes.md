@@ -1,92 +1,39 @@
 # Outline
 
-- Picture Worth 1000 Words
-  - ![red_blue_knowing.jpg]
-  - ![pacman_pie_chart.jpg]
-
-- Why Learn a New Language?
-  - Learning for the sake of knowledge
-    - "Good for you" / "learn one language per year"
-    - I like to learn
-  - Where is the industry going?
-    - Keeping ahead of the curve
-    - [Red Queen's Race](https://en.wikipedia.org/wiki/Red_Queen%27s_race)
-    - "Well, in our country," said Alice, still panting a little, "you'd generally get to somewhere else—if you run very fast for a long time, as we've been doing."
-      "A slow sort of country!" said the Queen. "Now, here, you see, it takes all the running you can do, to keep in the same place. If you want to get somewhere else, you must run at least twice as fast as that!"
-      - Lewis Carroll's Through the Looking-Glass
-    - We all believe this is important, as we all learned Ruby.
-  - Perspective
-    - New ideas
-      - What do other people think are strengths?
-      - What do they gain?
-    - Current tools stale/inadequate
-      - Look back at what I use today, what are its strengths?
-      - What are its weaknesses?
-      - What do I sacrifice?
-      - What do I take for granted?
-  - New Opportunity
-    - What doors does this open?
-
-- Rust
-  - Design Goal: "To design and implement a safe, concurrent, practical, static systems language."
-  - Developed by Mozilla
-  - Servo: browser engine.
-    - Just passed the Acid 2 test, roughly CSS 2.1.
-    - Concurrency, parallelism, safety, reliable
-  - Features List
-    - Feature by feature, compared to Ruby and others for perspective
-
-- Variables
-  - Good defaults. Immutability.
-      ```let x = 12; // immutable!```
+- differences between traits and interfaces
+  - extendable after "class" definition
+  - default implementation
+  - trait bounds on functions change compilation rules
+- memory intro
+  - rust makes you the best c++ programmer that ever lived
+  - riia
+- rework memory slides
+- missing deref in ownership slides
 
 
-+ stdout
-+ Types
-+ Expressions
-+ Functions
-+ Structs & Enums
-+ Matching
-+ Closures
-+ Tests
-+ Traits
-+ Option/Result
-+ Cargo
-+ Modules
-+ Pointers
-+ Lifetimes
-+ Ownership
-+ Strings
-+ Slices
-+ Iterators
-+ Common Traits & Kinds
-+ Tasks
-  + Arc
+- mailing list
+- basic website
+
+- lifetimes
+- ownership vs view vs loan
+
 ~ JSON Serialization
 - FFI & Unsafe
 + Documentation
 + Popular Projects on Github
 + Resources/Tutorials/Guides/play.rustlang.org
 - Macros
-  - They exist.
-  - Better than C Macros.
-  - I know nothing.
-  - Black magic.
-
 - rand::*
 - Implementing PartialEq, PartialOrd on Point
 
-+ note that Option is already defined
-~ more match
-  - exhaustive
-+ typos:
-  + contains
-  + value of pi
+- quickcheck
+- stainless
+- ffi
+- peek at Arc
 
-1.0
-- low level power & flexibility
-- high level safety & convenience
-
+Memory Hierarchy
+https://commons.wikimedia.org/wiki/File%3AComputerMemoryHierarchy.png
+By User:Danlash at en.wikipedia.org [Public domain], via Wikimedia Commons
 
 - amazing amount of smart people paid by mozilla to think about hard problems ruby ignores
 
@@ -102,6 +49,11 @@ Nitty Gritty Memory
 - what data is actually stored in an Enum?
 - what happens when i match on an Option?
 
+  let y = &w;          // borrowed reference to w's memory
+  let z = &x;          // borrowed reference to x's memory
+
+  let a = w; // => ok! stack memory copied
+  let b = x; // => error: cannot move out of `x` because it is borrowed
 
 - Our Lens
   - Rails consultant

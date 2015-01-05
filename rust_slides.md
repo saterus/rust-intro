@@ -1,4 +1,5 @@
-# The Rust Programming Language
+# [fit] Rust
+# or: How I Learned to Stop Worrying and Love the Compiler
 
 ![](./images/rust_belt_reflection.jpg)
 
@@ -6,6 +7,10 @@
 
 # [fit] Why?
 # Learn a New Language?
+
+^
+- i mostly use Ruby & friends day to day
+- i'll discuss a few of my reasons
 
 ---
 
@@ -44,8 +49,7 @@
 - Money to be made in COBOL.
 - Our industry is notorious for moving fast.
 - Unless you want to move to management?
-^
-- We all believe this is important, as we all learned Ruby.
+- We all believe this is important, as we all came to this talk
 
 ---
 
@@ -74,6 +78,7 @@
 
 ^
 - What do I sacrifice?
+- What *can't* I do?
 - What do I take for granted?
 
 ![](./images/diverse_tools.jpg)
@@ -198,7 +203,7 @@ Standard Library Supported
 
 ^
 - Remember concurrency basics in C?
-- Mutex, semaphores, *vomit*
+- Shared mutable state!
 - Imagine building a browser. Concurrently. In C++.
 - Or Concurrent Garbage Collection?
 - Erlang: Fail Fast
@@ -267,15 +272,6 @@ Standard Library Supported
 
 ---
 
-![](./images/bored.jpg)
-
-^
-Oh come on already!
-So bored!
-Show us the code!
-
----
-
 # I/O
 
 ```rust
@@ -287,7 +283,7 @@ fn main() {
 
   println!("I/O Works! {}! It's {}!",
            "It's not Haskell",
-           2014)
+           2014);
 
   // => I/O Works! It's not Haskell! It's 2014!
 }
@@ -302,7 +298,7 @@ $ rustc hello.rs && ./hello # compile and run program
 ^
 - you'll see we have some input/output
 - simple string interpolation
-- compiled to executable or library binary
+- compiled to executable binary
 - for now, all we need is a main fn
 - we'll revisit this later when we talk about Cargo
 
@@ -333,7 +329,7 @@ c / a       //  => ERROR
 ![right](./images/safety_first.jpg)
 
 ^
-- big difference from most languages
+- immutability: big difference from most languages
 - explicit type annotations => sad rubyists
 - No implicit type conversions
 - Resource Acquisition Is Initialization (1984, Bjarne Stroustrup, 5 years too late!)
@@ -433,16 +429,6 @@ fn main() {
 - available on enums and structs
 - we'll see this come up a lot with Option/Result types
 - method impl & call syntax
-
----
-
-# Match Everything (unfinished)
-
-```rust
-// match a tuple
-// match a struct
-// talk about exhaustive matches
-```
 
 ---
 
@@ -849,46 +835,37 @@ cargo doc
 ![fit](./images/brain.png)
 
 ^
-- Memory
-- please dont leave.
+- follows the explicit & safe goals
+- GC isn't explicit, predictable, safe, or easily concurrent
 
 ---
 
 ![](./images/ram2.jpg)
 
 ^
-- you're smart. you've got it.
-- we'll help you through this tough time
-
+- memory mgt is a tradeoff
+- often dangerous
+- very efficient
+- realized i don't know much
 
 ---
 
 ![](./images/memory2.jpg)
 
 ^
-- memory mgt is a tradeoff
-- realized i don't know much
-- explicit & safe
-- GC isn't explicit, predictable, safe, or easily concurrent
 - ruby/javascript very opaque.
-- "what happens here?"
+- when does ruby allocate memory?
 
 ---
 
-# Memory
+# Stack & Heap Memory
 
 ```rust
 fn main() {
-  let w = Red;         // stack allocate this Color
-  let x = box Green;   // heap allocate this Color
+  let stack: Color = Red;
+  let heap: Box<Color> = box Green;
 
-  let y = &w;          // borrowed reference to w's memory
-  let z = &x;          // borrowed reference to x's memory
-
-  let a = w; // => ok! stack memory copied
-  let b = x; // => error: cannot move out of `x` because it is borrowed
-
-  println!("w: {}, x: {}, y: {}, z: {}", w, x, y, z);
+  println!("stack: {}, heap: {}", stack, heap);
 
   // end of scope, memory gets freed
 }
@@ -896,87 +873,180 @@ fn main() {
 
 ^
 - stack? heap? help!
+- stack =~ completely local variables
+- heap =~ malloc =~ passed between fns
 - heap allocations stick around after we `return`
-- de/reference operators
-- no garbage collection, compile time!
-- explicit & safe memory mgt is a key design goal
-- expose costs of copying
 
 ---
 
-# Lifetimes
+# Stack & Heap Memory
 
 ```rust
 fn main() {
-  let x = box 2014u;       // x owns this heap memory
+  let stack: Color = Red;
 
-  {
-    let y = box 0i;        // y owns this heap memory
-    println!("{}", y);
-    // y falls out of scope, memory is freed
-  }
+  let heap: Box<Color> = box Green;
+  // C: int *ptr = malloc(sizeof(Color));
 
-  println!("{}", x);
-  // x falls out of scope, memory is freed
+  println!("stack: {}, heap: {}", stack, heap);
+
+  // end of scope, memory gets freed
+ // C: free(heap);
 }
 ```
 
 ^
+- no manual malloc/free
+- mess this up => apocolypse begins
+- no garbage collection, compile time!
+- heap overflow => attack
+- stack overflow => dev error
+
+---
+
+# Ownership
+
+```rust
+fn main() {
+  let r = box Red;  // allocate some memory
+
+  println!("the value of r: {}", r);  // access value of r
+
+  let color = r;  // transfer ownership
+
+  println!("the value of color: {}", color);  // access value of color
+
+  println!("the value of color: {}", r);  // => error: use of moved value: `r`
+
+  // owner falls out of scope, freeing memory
+}
+```
+
+^
+- key/unique concept in rust
+- single owner
+- safe memory management
+- many other features fall out of this idea
+
+---
+
+# Borrowing
+
+```rust
+fn main() {
+  let r = box Red;  // allocate some memory
+
+  println!("the value of r: {}", r);  // access value of r
+
+  let color = &r;  // borrow a reference
+
+  println!("the value of color: {}", color);  // access borrowed value
+
+  println!("the value of color: {}", r);  // access owned value
+
+  // owner & borrower fall out of scope
+  // owner frees memory
+}
+```
+
+^
+- second reference to the same memory
+- immutability makes this safe
+- as many immutable borrows as you like
+
+---
+
+# Borrow Checker
+
+```rust
+fn main() {
+  let x = box 2014u;
+
+  {                       // introduce new scope
+    let y = 0i;
+    println!("x: {}, y: {}", x, y);
+  }                       // y falls out of scope, memory is freed
+
+  println!("{}", x);
+}                         // x falls out of scope, memory is freed
+```
+
+^
+- compiler subsystem
 - compiler marks regions of scope
-- one single owner of memory
-- responsible for allocating and freeing
+- owner responsible for allocating and freeing
 - We can't forget to free our memory. (valgrind)
 - borrow checker makes this safe at compile time
 
 ---
 
-# Lifetimes (cont.)
+# Copying
 
 ```rust
 fn main() {
-                       // -----------------  lifetime 'a
-  let x = box 2014u;
+  let x = Red; // on stack
+  let y = x;   // copied!
 
-  {
-                       // ---------- lifetime 'b
-    let y = box 0i;
-    println!("{}", y);
-                       // ---------- lifetime 'b
-  }
+  println!("{}", x); // => ok
+  println!("{}", y); // => ok
 
-  println!("{}", x);
-                       // -----------------  lifetime 'a
+  // x frees its copy
+  // y frees its copy
 }
 ```
 
 ^
-- lifetime syntax
-- mark regions of scope
-- owner responsible for allocating and freeing
-- similar to obj-c automatic reference counting
+- non-boxed values are copied!
+- byte for byte copy (memcpy)
+- each an owner of its own memory
+- shallow copy
 
 ---
 
-# Ownership & Movement
+# Why Ownership on the Heap?
 
 ```rust
 fn main() {
-  let x = box Point { x: 0.0f64, y: 0.0 };  // x is the owner of memory
+  let x: Vec<Color> = vec![Red, Green, Red];
 
-  let y = x;          // transfer ownership to y
+  // if we copied...
+  let y = x;
 
-  println!("{}", x);  // => error: use of moved value: `x`
-  println!("{}", y);
-
-  // y is the owner, so y frees the memory
+  // x frees its vector contents
+  // y frees the *same* vector contents
+  // double free!
 }
 ```
 
 ^
-- one single owner of memory
-- that's how we know when to free it
-- `use of moved value` is always a compile time error
-- aliased memory is difficult to reason about
+- Vector contents are heap allocated
+- shallow copy
+- x, stack allocated pointer to that memory
+- y is another stack allocated pointer, same memory
+
+---
+
+# Ownership Saves the Day
+
+```rust
+fn main() {
+  let x: Vec<Color> = vec![Red, Green, Red];
+
+  // the ownership of the contents moves to y
+  let y = x;
+
+  println!("{}", y); // => ok
+
+  println!("{}", x); // => error! use of moved value
+
+  // x is already invalidated
+  // y frees the vector contents
+}
+```
+
+^
+- compiler spots this, prevents it
+- anything non-copy-able is ownership based
 
 ---
 
@@ -987,21 +1057,19 @@ fn main() {
   let x = box Green;  // x is the owner of memory
 
   let y = &x;         // y *borrows* x
-  let z = &x;         // z also *borrows* x
 
   println!("{}", x);  // ok!
-  println!("{}", y);  // ok!
-  println!("{}", z);  // ok! everyone can read immutably borrowed memory!
+  println!("{}", y);  // ok! everyone can read immutably borrowed memory!
 
   let k = x;
   // => error: cannot move out of `x` because it is borrowed
 
+  // y is just a stack allocated pointer
   // x is the owner, so x frees the memory
 }
 ```
 
 ^
-- one single owner of memory, remember?
 - ownership can only pass when they own it wholely. no borrows.
 
 ---
@@ -1009,11 +1077,11 @@ fn main() {
 # Ownership w/ Functions
 
 ```rust
-fn advance_light(owner: Box<Color>) -> Color {
+fn advance_light(owner: Box<Color>) -> Box<Color> {
   match *owner {
-    Red => Green,
-    Yellow => Red,
-    Green => Yellow
+    Red => box Green,
+    Yellow => box Red,
+    Green => box Yellow
   }
   // `owner` owns the memory. falls out of scope and frees it.
 }
@@ -1040,16 +1108,16 @@ fn peek(borrower: &Box<Color>) -> Color {
 
 ```rust
 fn main() {
-  let stoplight = box Green;
-  let next_color = peek(&stoplight);
+  let stoplight: Box<Color> = box Green;
+  let next_color: Color = peek(&stoplight);
 
   println!("{} will change to {}", stoplight, next_color);
 
-  let new_light = advance_light(stoplight);
+  let new_light: Box<Color> = advance_light(stoplight);
   println!("Changed to {}", new_light);
 
   println!("Original Light {}", stoplight);
-  // => error: use of moved value: `stoplight
+  // => error: use of moved value: `stoplight`
 }
 ```
 
@@ -1084,8 +1152,6 @@ fn main() {
 - mutability is handy
 - keep memory as immutable as possible, allow local mutation
 - ruby marks *some* methods with ! to indicate mutation
-- c++ probably has some extensions for immutability
-- c does not.
 
 ---
 
@@ -1114,7 +1180,7 @@ fn main() {
 
 ^
 - strict rules about actually mutating stuff
-- lifetime based. if y falls out of scope...
+- scope/lifetime based. if y falls out of scope...
 
 
 ---

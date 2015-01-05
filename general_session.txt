@@ -1,0 +1,18 @@
+Title:
+
+When to Ship It!
+
+Abstract:
+
+You've poured your heart and soul into your latest project and everything seems to be working perfectly. So you ship it.
+
+Then what? Is the site up? Can users complete payment? What needs to be in place before you consider your project ready for production?
+
+This talk will cover the key components of any production system, including catching errors early, tracking historical performance, and correctly notifying the appropriate people during disruptions.
+
+
+Reviewer Notes:
+
+In the last 3 years of being a consultant, I've been assigned to 7 separate projects. Setting up projects in a production-ready configuration has become second nature. I've seen several projects launch prematurely (from a purely engineering perspective). I'd love to help others avoid the same mistakes.
+
+This talk has been in the works for a while. By CodeMash, I will have presented it at local user groups.
