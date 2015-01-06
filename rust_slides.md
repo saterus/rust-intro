@@ -1,115 +1,16 @@
 # [fit] Rust
 # or: How I Learned to Stop Worrying and Love the Compiler
 
+Alex Burkhart | @saterus | Neo Innovation
+
 ![](./images/rust_belt_reflection.jpg)
-
----
-
-# [fit] Why?
-# Learn a New Language?
-
-^
-- i mostly use Ruby & friends day to day
-- i'll discuss a few of my reasons
-
----
-
-# *Pure* **Knowledge**
-
-^
-- Deliberate Practice
-- "Good for you"
-- "learn one language per year"
-- I like to learn
-- Joy of learning. Teaching.
-
-![left](./images/library.jpg)
-
----
-
-## Where is the industry going?
-
-^
-- Keeping ahead of the curve.
-- We highly value learning on the job, when the knowledge is needed.
-- But some things require a foundation.
-- Awareness.
-
-![](./images/tracks.jpg)
-
----
-
-## The Red Queen's Race
-
-> "Well, in our country," said Alice, still panting a little, "you'd generally get to somewhere else—if you run very fast for a long time, as we've been doing."
-  "A slow sort of country!" said the Queen. "Now, here, you see, it takes all the running you can do, to keep in the same place. If you want to get somewhere else, you must run at least twice as fast as that!"
--- Lewis Carroll's Through the Looking-Glass
-
-^
-- Money to be made in COBOL.
-- Our industry is notorious for moving fast.
-- Unless you want to move to management?
-- We all believe this is important, as we all came to this talk
-
----
-
-## *Perspective*
-
-![](./images/lens.jpg)
-
-^
-- What is your lens?
-- Difficult to accurately judge
-- Colors or distorts your view of everything
-
----
-
-## Current Tools: *Stale?*
-
-^
-- Look back at what I use today, what are its strengths?
-- What are its weaknesses?
-
-![](./images/rusted_tools.jpg)
-
----
-
-## Current Tools: *Insufficient?*
-
-^
-- What do I sacrifice?
-- What *can't* I do?
-- What do I take for granted?
-
-![](./images/diverse_tools.jpg)
-
----
-
-## New Ideas
-
-^
-- What do other people think are strengths?
-- What do they gain?
-
-![](./images/plane.jpg)
-
----
-
-## New Opportunity
-
-^
-- What *could* we gain?
-- New clients?
-- Interesting projects?
-
-
-![](./images/open_gate.jpg)
 
 ---
 
 ![original|fit](./images/rust-logo.png)
 
 ^
+- you are all here, you must be aware
 - Which brings us to Rust
 
 ---
@@ -121,6 +22,7 @@
 
 ^
 - My pitch
+- best of these
 - Still alpha, still undergoing heavy dev. big changes.
 - Seems like good decisions being made.
 - "Rust keeps the C abstract machine model but innovates on the language interface."
@@ -147,13 +49,13 @@ Security Errors
 Programmer Induced Instability
 
 ^
-- buffer overflows
+- Buffer Overflows
 - UndefinedMethodError
 - IndexOutOfBoundsError
 - null pointer -> crash
 - double frees -> crash
 - never freed memory -> memory leak -> OOM
-- dangling/wild pointers -> unpredictability
+- dangling/wild pointers -> undefined behavior
 
 ---
 
@@ -213,7 +115,7 @@ Standard Library Supported
 ## Mozilla
 
 
-![right](./images/firefox.png)
+![fit,right](./images/firefox.png)
 
 **Servo**: experimental browser engine.
 
@@ -251,7 +153,7 @@ Standard Library Supported
 - types
 - compilation steps
 - curly braces
-- new concepts!
+- if you are lucky, new concepts!
 
 ^
 - llvm backend
@@ -276,23 +178,16 @@ Standard Library Supported
 
 ```rust
 fn main() {
-  let hello = "Hello World!";
-  println!("{}", hello);
-
+  let hello = "Hello";
+  println!("{} {}!", hello, "World");
   // => Hello World!
-
-  println!("I/O Works! {}! It's {}!",
-           "It's not Haskell",
-           2014);
-
-  // => I/O Works! It's not Haskell! It's 2014!
 }
 ```
 
 Compile and Run
 
 ```bash
-$ rustc hello.rs && ./hello # compile and run program
+$ rustc hello.rs && ./hello
 ```
 
 ^
@@ -306,24 +201,24 @@ $ rustc hello.rs && ./hello # compile and run program
 
 # Good Defaults
 
-**Immutable** variables:
+**Immutablity**:
 
 ```rust
 let x = 2014u;
-
 x = 0       //  => ERROR
 ```
 
 Strongly Typed:
 
 ```rust
-let a = 2014_i64;
-let b = 3.14_f64;
-let c = "100";
+let a = 3.14_f64;
+let b = "100";
+let c = [1u32, 2, 3];
 
 a * b       //  => ERROR
-b + c       //  => ERROR
-c / a       //  => ERROR
+b / a       //  => ERROR
+c + a       //  => ERROR
+c + c       //  => ERROR
 ```
 
 ![right](./images/safety_first.jpg)
@@ -332,7 +227,6 @@ c / a       //  => ERROR
 - immutability: big difference from most languages
 - explicit type annotations => sad rubyists
 - No implicit type conversions
-- Resource Acquisition Is Initialization (1984, Bjarne Stroustrup, 5 years too late!)
 - Anyone want to argue about what happens in javascript in this situation?
 
 ---
@@ -340,20 +234,21 @@ c / a       //  => ERROR
 # Functions
 
 ```rust
-fn add(x: uint, y: uint) -> uint {
+fn add(x: i32, y: i32) -> i32 {
   x + y
 }
 
 fn main() {
   let a = 100;
-  let x = add(a, 1);
-  println!("{}", x);
+  let b = add(a, 1);
+
+  println!("{}", b);
 }
 
 // => 101
 ```
 
-![right](./images/adding_machine.jpg)
+![left](./images/adding_machine.jpg)
 
 ^
 - functions require explicitly typed signatures
@@ -368,67 +263,272 @@ fn main() {
 # Enums
 
 ```rust
-#[deriving(Show)]
-enum Color {
-  Red,
-  Yellow,
-  Green
+#[derive(Show)]
+enum Coffee {
+  Hot,
+  Iced,
+  Instant,  // :'(
 }
 
 fn main() {
-  let stoplight = Red;
+  let cold_brew: Coffee = Coffee::Iced;
 
-  println!("{}", stoplight);
+  println!("Just one {}", cold_brew);
 }
 ```
-
-![right,60%](./images/stoplight.jpg)
 
 ^
 - Playing with numbers alone won't get us far...
 - First category of data containers
-- Red OR Yellow OR Green
 - Algebraic Datatypes!
 - C-unions
-- Doesn't exist in ruby, we use symbols for this
+- Hot OR Iced OR Instant
+
+![](./images/cold_brew.jpg)
+
+---
+
+# Enums
+
+```rust
+#[derive(Show)]
+enum Coffee {
+  Hot,
+  Iced,
+  Instant,  // :'(
+}
+
+fn main() {
+  let drink_caddy: [Coffee; 4] = [
+    Coffee::Iced,
+    Coffee::Hot,
+    Coffee::Iced,
+    Coffee::Instant,
+  ];
+
+  println!("Order for the whole team: {}", drink_caddy);
+}
+```
+
+^
+- Hot OR Iced OR Instant
+- types vs values
+- Doesn't exist in ruby
 - Lists, Option, Result
 
 ---
 
-# Matching
+# Pattern Matching
 
 ```rust
-impl Color {
-  fn new() -> Color {
-    Red  // safe default
-  }
+#[derive(Show)]
+enum Coffee {
+  Hot
+  Iced
+  Instant,    // :'(
+}
 
-  fn peek_next(self) -> Color {
-    match self {
-      Red => Green,
-      Yellow => Red,
-      Green => Yellow
-    }
+fn main() {
+  let cup = Coffee::Instant;
+
+  let snob_approved = match cup {
+    Coffee::Iced => true,
+    Coffee::Hot => true,
+    Instant => false,
+  };
+
+  println!("Drink from cup? {}", snob_approved);
+
+}
+```
+
+^
+- destructuring (ruby, clojure, haskell)
+- match on shape
+- match is an expression
+- all match arms must return the same type
+- exhaustive patterns => safety
+- we'll see this come up a lot with Option/Result types
+
+---
+
+# Enums are Containers
+
+```rust
+#[derive(Show)]
+enum Coffee {
+  Hot(u8),    // temp F
+  Iced(bool), // still has ice
+  Instant,    // :'(
+}
+
+fn main() {
+  let first_cup: Coffee = Coffee::Iced(true);
+  let second_cup: Coffee = Coffee::Hot(212);
+
+  println!("Drink {} then {}.", first_cup, second_cup);
+}
+```
+
+^
+- different shapes
+- data per shape
+- size is 1 byte + largest variant
+
+![70%](./images/coffee.jpg)
+
+
+---
+
+# Simpler Matching
+
+```rust
+#[derive(Show)]
+enum Coffee {
+  Hot(u8),    // temp F
+  Iced(bool), // still has ice
+  Instant,    // :'(
+}
+
+fn main() {
+  let cup = Coffee::Iced(true);
+
+  let snob_filtered = match cup {
+    Instant => false,
+    _ => true
+  };
+
+  println!("Drink from cup? {}", snob_filtered);
+}
+```
+
+![left,60%](./images/coffee2.jpg)
+
+^
+- wildcard
+- great performance
+- more useful than switch/case
+- less error prone
+
+---
+
+# Expressive Matching
+
+```rust
+#[derive(Show)]
+enum Coffee {
+  Hot(u8),    // temp F
+  Iced(bool), // still has ice
+  Instant,    // :'(
+}
+
+fn main() {
+  let cup: Coffee = Coffee::Hot(212);
+
+  let safe = match cup {
+    Coffee::Iced(x) if x => true,
+    Coffee::Hot(120...150) => true,
+    _ => false,
+  };
+
+  println!("Drink from cup? {}", safe);
+}
+```
+
+^
+- more complex matching
+- bind variables for inner data
+- guard patterns
+- same exhaustivity guarantee
+
+---
+
+# Enums in Functions
+
+```rust
+fn fresh() -> Coffee {
+  Coffee::Hot(212)
+}
+
+fn drinkable(cup: Coffee) -> bool {
+  match cup {
+    Coffee::Iced(x) if x => true,
+    Coffee::Hot(120...150) => true,
+    _ => false,
   }
 }
 
 fn main() {
-  let stoplight = Color::new();
-  let new_stoplight = stoplight.peek_next();
-  println!("{} will become {} soon.", stoplight, new_stoplight);
+  let cup_o_joe = fresh();
+  println!("Drink from cup? {}", drinkable(cup_o_joe));
+}
+
+```
+
+^
+- first class "enums"
+- match is an expression
+
+---
+
+# Static Methods on Enums
+
+```rust
+#[derive(Show)]
+enum Coffee {
+  Hot(u8),    // temp F
+  Iced(bool), // still has ice
+  Instant,    // :'(
+}
+
+impl Coffee {
+  fn fresh() -> Coffee {
+    Coffee::Hot(212)
+  }
+}
+
+fn main() {
+  let cup_o_joe: Coffee = Coffee::fresh();
+
+  println!("Fresh cup of {}", cup_o_joe);
 }
 ```
 
-*Destructure* your Enums, Structs, & Tuples!
+^
+- static method
+- constructors are not special
+- new() is convention
+- not objects, still enums
 
-![right](./images/green_stoplight.jpg)
+---
+
+# Instance Methods
+
+```rust
+impl Coffee {
+
+  fn drinkable(self) -> bool {
+    match self {
+      Coffee::Iced(x) if x => true,
+      Coffee::Hot(120...150) => true,
+      _ => false,
+    }
+  }
+
+}
+
+fn main() {
+  let cup_o_joe: Coffee = Coffee::fresh();
+
+  println!("Fresh, but drinkable?", cup_o_joe.drinkable());
+}
+```
 
 ^
-- destructuring is available for ruby arrays...
-- haskell, clojure, others?
-- available on enums and structs
-- we'll see this come up a lot with Option/Result types
-- method impl & call syntax
+- static method
+- constructors are not special
+- new() is convention
+- not objects, still enums
 
 ---
 
@@ -436,18 +536,18 @@ fn main() {
 
 ```rust
 #[test]
-fn advances_yellow_to_red() {
-  let stoplight = Yellow.peek_next();
-  match stoplight {
-      Red => true,
-      _ => fail!("Yellow stoplights advance to Red!")
-  };
+fn avoid_lukewarm_coffee() {
+  let was_hot = Coffee::Hot(72);
+  let was_cold = Coffee::Iced(false);
+
+  assert!( !was_hot.drinkable() );
+  assert!( !was_cold.drinkable() );
 }
 ```
 
 ```bash
-$ rustc --test color.rs && ./color # compile and run tests
-$ rustc color.rs && ./color # compile and run program
+$ rustc --test coffee.rs && ./coffee # compile and run tests
+$ rustc coffee.rs && ./coffee # compile and run program
 ```
 
 ^
@@ -484,7 +584,7 @@ test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured
 # Structs
 
 ```rust
-#[deriving(Show)]
+#[derive(Show)]
 struct Point {
   x: f64,
   y: f64
@@ -1524,7 +1624,7 @@ fn main() {
 ```rust
 use std::sync::Arc;       // => foreshadowing...
 
-#[deriving(Show)]
+#[derive(Show)]
 struct HugeStruct {
   huge_name: String
 }
@@ -1584,7 +1684,7 @@ extern crate serialize;
 use serialize::json::{Json, ToJson, Object};
 use std::collections::TreeMap;
 
-#[deriving(Show)]
+#[derive(Show)]
 struct User {
   id: u64,
   name: String,
@@ -1647,7 +1747,7 @@ brenda.to_json():
 extern crate serialize;
 use serialize::json;
 
-#[deriving(Show,Encodable)]
+#[derive(Show,Encodable)]
 struct User {
   id: u64,
   name: String,
@@ -1671,7 +1771,7 @@ fn main() {
 # Decoding Json
 
 ```rust
-#[deriving(Show,Encodable,Decodable)]
+#[derive(Show,Encodable,Decodable)]
 struct User {
 *snip*
 ```
@@ -1746,3 +1846,6 @@ memory2.jpg https://secure.flickr.com/photos/jurvetson/1130981
 ram2.jpg https://secure.flickr.com/photos/isherwoodchris/6917253693/
 brain.png https://secure.flickr.com/photos/125992663@N02/14597738221
 schematic.jpg https://secure.flickr.com/photos/zdepth/8227198392/
+coffee.jpg https://www.flickr.com/photos/windysydney/4082857429
+coffee2.jpg https://www.flickr.com/photos/captainmcdan/76555293/
+cold_brew.jpg https://www.flickr.com/photos/juanomatic/8482277443
