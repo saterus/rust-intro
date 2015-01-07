@@ -5,27 +5,114 @@ Alex Burkhart | @saterus | Neo Innovation
 
 ![](./images/rust_belt_reflection.jpg)
 
+^
+- consultant at Neo Innovation in Columbus
+- Rich Web Applications, Rails, Ember
+- we all wear a lot of hats
+- dba, devops, architect, ux designer
+- Dabbler, love to learn
+
 ---
 
 ![original|fit](./images/rust-logo.png)
 
 ^
-- you are all here, you must be aware
+- i also love to teach
+- best teaching is sharing
 - Which brings us to Rust
+- share my enthusiasm for Rust with you
+- get excited, learn new stuff, profit
 
 ---
 
 # [fit] Rust =
-# *C++* + *Haskell* + *Ruby*
+# [*C++*, *Haskell*, *Ruby*].max()
 
 ![original|fit](./images/rust-logo.png)
 
 ^
 - My pitch
 - best of these
-- Still alpha, still undergoing heavy dev. big changes.
-- Seems like good decisions being made.
 - "Rust keeps the C abstract machine model but innovates on the language interface."
+- Good Decisions being made, imo.
+- many very smart people, with a wide variety of backgrounds
+- so are you, so apologies if i go too slow
+
+---
+
+![original|fit](./images/rust-logo.png)
+
+^
+- 1.0.0-alpha is being released this friday
+- exciting week: soul-crushing amount of breaking changes this week
+- astonishing amount of work being done
+- best run project i've ever seen
+- most libraries have been mostly-broken for the last 2-3 weeks
+- this would have been the best workshop to run 2-3 weeks from now
+
+---
+
+#[fit] Installfest
+
+The Rust Compiler is ~100mb
+
+Latest Nightlies, not 0.12 release
+
+## 1. https://www.sharedrop.io/
+## 2. Flash Drives
+## 3. http://www.rust-lang.org/
+
+![original|fit](./images/rust-logo.png)
+
+^
+- need a text editor, terminal, and the Rust compiler
+- flash drives of binaries for different architectures
+- 2015-01-05 nightly build -> many changes from new years, fewer bugs
+- 2015-01-06-7 might work, danger will robinson
+- let's do a little bit of install now as people drift in
+
+---
+
+![fit](./images/language_activity.png)
+
+^
+- 36,000 commits
+- site that tracks breaking changes being committed
+
+---
+
+
+![fit](./images/rustacean.png)
+
+^
+- Rustaceans won out over Rustorian
+- need to add a monacle to the crab
+
+---
+
+#[fit] play.rust-lang.org
+
+![](./images/play_rust.png)
+
+^
+- web sandbox!
+- all is not lost if you can't get a compiler...don't leave!
+- have i mentioned that the community here is amazing enough yet?
+- complete with vim/emacs modes!
+- documentation examples link to live, runnable code!
+
+---
+
+# Columbus Rust Society
+
+### meetup.com/columbus-rs/
+
+![](./images/library.jpg)
+
+^
+- shameless plug
+- things will start getting interesting
+- enough preface, let's go
 
 ---
 
@@ -93,6 +180,7 @@ Optimization
 - Java static straight jacket
 - Ruby barely catches syntax errors before runtime
 - Most of Rust's safety happens at compile time
+- LLVM
 
 ---
 
@@ -112,17 +200,24 @@ Standard Library Supported
 
 ---
 
-## Mozilla
+#[fit] Mozilla Research
 
+## Core Rust Language & Compiler
 
-![fit,right](./images/firefox.png)
-
-**Servo**: experimental browser engine.
+## Servo browser engine
 
 - Concurrency
 - Parallelism
 - Safety
 - Reliablity
+
+![](./images/research.jpg)
+
+^
+- encubation since 2010
+- Evolving the language with real usecases
+- Samsung involvement
+- SF Rust Meetup Videos
 
 ---
 
@@ -154,10 +249,6 @@ Standard Library Supported
 - compilation steps
 - curly braces
 - if you are lucky, new concepts!
-
-^
-- llvm backend
-- bootstrap compilation with rustc
 
 ---
 
@@ -273,7 +364,8 @@ enum Coffee {
 fn main() {
   let cold_brew: Coffee = Coffee::Iced;
 
-  println!("Just one {}", cold_brew);
+  println!("I'll have one {}.", cold_brew);
+  // => I'll have one Iced.
 }
 ```
 
@@ -307,6 +399,7 @@ fn main() {
   ];
 
   println!("Order for the whole team: {}", drink_caddy);
+  // => Order for the whole team: [Iced, Hot, Iced, Instant]
 }
 ```
 
@@ -563,14 +656,24 @@ $ rustc coffee.rs && ./coffee # compile and run program
 # Tests (cont.)
 
 ```bash
-$ rustc --test color.rs && ./color # compile and run tests
-color.rs:9:3: 11:4 warning: code is never used: `new`, #[warn(dead_code)] on by default
-color.rs:9   fn new() -> Color {
-color.rs:10     Red  // safe default
-color.rs:11   }
+$ rustc --test coffee.rs && ./coffee # compile and run tests
+
+coffee.rs:5:3: 5:10 warning: variant is never used: `Instant`, #[warn(dead_code)] on by default
+coffee.rs:5   Instant,    // :'(
+            ^~~~~~~
+coffee.rs:10:3: 12:4 warning: method is never used: `fresh`, #[warn(dead_code)] on by default
+coffee.rs:10   fn fresh() -> Coffee {
+coffee.rs:11     Coffee::Hot(212)
+coffee.rs:12   }
+coffee.rs:24:1: 28:2 warning: function is never used: `main`, #[warn(dead_code)] on by default
+coffee.rs:24 fn main() {
+coffee.rs:25   let cup_o_joe: Coffee = Coffee::fresh();
+coffee.rs:26
+coffee.rs:27   println!("Fresh cup of {}", cup_o_joe);
+coffee.rs:28 }
 
 running 1 test
-test advances_yellow_to_red ... ok
+test avoid_lukewarm_coffee ... ok
 
 test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured
 ```
@@ -578,6 +681,43 @@ test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured
 ^
 - dead code lint spots both dead code AND missing test coverage
 - two step test: compile? ok! business logic: ok!
+
+---
+
+# Let's Build a Stoplight
+
+1. `Color` enum
+1. Default constructor -> Red
+1. `next_color` instance method
+1. Tests for both functions
+
+![right](./images/stoplight.jpg)
+
+---
+
+# Tuples
+
+```rust
+fn main() {
+  let sized_coffee = (12u64, Coffee::Instant);
+
+  let rgb: (u8, u8, u8) = (100,200,0);
+
+  let (_, green, _) = rgb;
+
+  println!("Medium cup: {}", sized_coffee);
+  println!("Full: {}, Green: {}", rgb, green);
+
+  let zero_sized = ();
+}
+```
+
+^
+- compound data, not union
+- exactly N elements, in exactly those positions
+- heterogenous types
+- destructuring assignment, matching
+- zero sized type
 
 ---
 
@@ -594,6 +734,7 @@ fn main() {
   let origin = Point { x: 0.0, y: 0.0 };
 
   println!("{}", origin);
+  // => Point { x: 0, y: 0 }
 }
 ```
 
@@ -602,7 +743,100 @@ fn main() {
 ^
 - second basic unit of data encapsulation
 - list of named fields
-- not memory ordered, no crazy pointer arithmetic
+
+---
+
+# Structs
+
+```rust
+#[derive(Show)]
+struct Point {
+  x: f64,
+  y: f64
+}
+
+impl Point {
+  fn origin() -> Point {
+    Point { x: 0.0, y: 0.0 }
+  }
+}
+
+fn main() {
+  let origin = Point::origin();
+
+  println!("{}", origin);
+  // => Point { x: 0, y: 0 }
+}
+```
+
+![](./images/struct2.jpg)
+
+^
+- same rules for adding methods via impl blocks
+
+---
+
+# Complex Data Structures
+
+```rust
+#[derive(Show)]
+struct Beverage {
+  volume: f32,     // oz
+  price: u32,      // cents
+  style: Coffee,
+  free_refills: bool,
+}
+
+fn main() {
+  let great_deal = Beverage { 
+    style: Coffee::Iced(true),
+    price: 100,
+    free_refills: true,
+    volume: 20.0,
+  };
+
+  println!("I would buy {}.", great_deal);
+  // => I would buy Beverage { volume: 20, price: 100,
+  //    style: Iced(true), free_refills: true }.
+}
+```
+
+^
+- fundamental building blocks of rust programs
+- rubyist: what replaces hash? *structs*
+- no overhead
+- size of fields
+
+---
+
+# Arbitrarily Complex
+
+```rust
+#[derive(Show)]
+struct Monster {
+  current_position: Point,
+  health_points: u32,
+  favorite_drink: Coffee,
+}
+
+fn main() {
+  let minotaur = Monster {
+    current_position: Point { x: 10.0, y: 100.0 },
+    health_points: 20,
+    favorite_drink: Coffee::Instant,
+  };
+
+  println!("The minotaur has bad taste: {}", minotaur);
+  // => The minotaur has bad taste: Monster { current_position:
+  //    Point { x: 10, y: 100 }, health_points: 20, favorite_drink: Instant }
+}
+```
+
+^
+- nested structs of enums -> ok!
+- not memory ordered
+- llvm optimizations
+- no crazy pointer arithmetic
 - declared at compile time, no crazy @instance == nil default
 
 ---
@@ -630,39 +864,558 @@ enum Option<T> {   //  exact definition from standard library
 fn main() {
   let a: Option<uint> = Some(10);
   let b: Option<uint> = None;
-  let c: Option<Color> = Some(Green);
-  let d: Option<Color> = None;
+  let c: Option<Coffee> = Some(Coffee::Instant);
+  let d: Option<Coffee> = None;
 
   println!("{}, {}, {}, {}", a, b, c, d);
-
-  // => Some(10), None, Some(Green), None
+  // => Some(10), None, Some(Instant), None
 
   b == d; // => error: mismatched types... *snip*
 }
 ```
 
 ^
-- Our first polymorphic type
 - "empty value" checked at compile time
-- generalize for all types
-- composable, define logical functions on Option instead of nullchecks
-- 46 std lib fns on Option<T>
-- java flashbacks: stabby type signatures... :(
+- pushed into the type system
+- type checks, not null checks
 
 ---
 
-# Polymorphic Types (cont.)
+# Option Types (cont.)
+
+```rust
+enum Option<T> {   //  exact definition from standard library
+  Some(T),
+  None
+}
+
+fn main() {
+  let a = Some(10u32);
+  let b = None;
+
+  let squared = match a {
+    Some(x) => x * x,
+    None => 0
+  };
+
+  let either = b.or(a);
+
+  println!("Squared: {}, Either: {}", squared, either);
+  // => Squared: 100, Either: Some(10)
+}
+```
+
+^
+- composable, define logical functions on Option instead of nullchecks
+- 46 std lib fns on Option<T>
+- Our first polymorphic type
+
+---
+
+# [fit] Let's Build a Treasure Hunter
+
+1. Make Point, Archaeologist, & Treasure structs
+1. Write a default constructor for Point
+1. Write a function that returns the treasures's position if it has not been disturbed
+1. Write a function that gives (x,y) directions from the Archaeologist to the Treasure
+1. Write tests for all 3 functions
+
+^
+- feel free to take some personal liberties with your other fields
+- try and avoid strings for now
+
+---
+
+# Result
+
+```rust
+enum Result<T,E> {   //  exact definition from standard library
+  Ok(T),
+  Err(E),
+}
+
+fn main() {
+  let pot_contents = Coffee::Hot(180);
+
+  let could_fail = match pot_contents {
+    cup @ Coffee::Hot(130...212) => Ok(cup),
+    _ => Err("Time to brew a new pot."),
+  };
+
+  let no_excuses: Option<Coffee> = could_fail.ok();
+  let cant_wait = no_excuses.unwrap_or("To the coffee shop!");
+}
+```
+
+^
+- second pervasive enum
+- for all those times when null wasn't good enough
+- include an error message
+- 40 methods on Result in std lib
+- composable/convertable w/ option
+
+---
+
+# Strings
+
+```rust
+use std::ascii::AsciiExt;
+
+fn main() {
+  let polite = "Hello";
+  let rude = polite.to_ascii_uppercase();
+
+  println!("{} is polite.", polite);
+  println!("{} is rude.", rude);
+}
+```
+
+^
+- That took a while to get here...
+- Ruby doesn't care, it copies
+- Rust is very careful with strings
+- valid utf8 seq
+- AsciiExt trait adds methods
+
+---
+
+# String Slices
+
+```rust
+use std::ascii::AsciiExt;
+
+fn main() {
+  let polite: &str = "Hello";               // string slice
+  let rude: String = polite.to_ascii_uppercase(); // string
+
+  println!("{} is polite.", polite);
+  println!("{} is rude.", rude);
+}
+```
+
+^
+- Two types: whomp whomp
+- ruby has 2 string types too: String & Symbol
+- str is the primitive string type
+- Strings are heap allocated
+- static string are written into your binary
+- used as slices, since they are not allocated
+
+---
+
+# Virtual Memory Architecture
+
+![fit](./images/virtual_memory.png)
+
+^
+- to really understand why there are 2 strings...
+- RAM is truely random access, no order
+- OS imposes order with VM
+- gives every process the illusion of infinite memory
+- simplified model...
+
+---
+
+![fit](./images/virtual_memory.png)
+
+^
+- TEXT holds all the assembly instructions of your compiled program
+- DATA holds static variables
+- HEAP holds dynamically allocated memory
+- STACK holds local variables of function scopes
+- Separate Stacks per thread, shared Heap per process
+
+---
+
+# Stack & Heap Memory
 
 ```rust
 fn main() {
-  let vector: Vec<uint> = vec![1, 2, 3, 4, 5];
+  let stack: Color = Color::Red;
+  let heap: Box<Color> = box Color::Green;
+
+  println!("stack: {}, heap: {}", stack, heap);
+
+  // end of scope, memory gets freed
+}
+```
+
+^
+- explicit choices for allocation
+- memory has been getting cleaned up for us already
+
+---
+
+# Stack & Heap Memory
+
+```rust
+fn main() {
+  let stack: Color = Color::Red;
+
+  let heap: Box<Color> = box Color::Green;
+  // C: int *ptr = malloc(sizeof(Color));
+
+  println!("stack: {}, heap: {}", stack, heap);
+
+  // end of scope, memory gets freed
+  // C: free(heap);
+}
+```
+
+^
+- Box is a heap allocated pointer
+- no manual malloc/free
+- mess this up => apocolypse begins
+- no garbage collection, RC, inserted at compile time!
+- RAII: Resource Acquisition Is Initialization ('84)
+- sized types
+- heap overflow => attack
+- stack overflow => dev error
+
+---
+
+#[fit] Ownership
+
+![](./images/cleanup.jpg)
+
+^
+- key to much of rust's safety
+- if you learn one thing here, make it this
+- single owner of memory
+- responsible for cleanup
+- recursive
+
+---
+
+# Ownership
+
+```rust
+fn main() {
+  let r = box Color::Red;  // allocate some memory
+
+  println!("the value of r: {}", r); // access r
+
+  let color = r;  // transfer ownership to `color`
+
+  println!("the value of color: {}", color); // access color
+
+  println!("the value of color: {}", r);
+  // => error: use of moved value: `r`
+
+  // owner `color` falls out of scope
+  // owner drops its property
+}
+```
+
+^
+- as a Name falls out of scope, it recursively drops anything it owns
+- drop -> free/destructor
+- safe memory management
+- many other features naturally fall out of this idea
+
+---
+
+# Borrowing
+
+```rust
+fn main() {
+  let r: Box<Color> = box Color::Red;  // allocate some memory
+
+  println!("the value of r: {}", r);  // access r
+
+  let color: &Box<Color> = &r;  // borrow a reference
+
+  // access borrowed value
+  println!("the value of color: {}", color);
+
+  // access owned value
+  println!("the value of color: {}", r);
+
+  // borrower & owner are both dropped
+}
+```
+
+^
+- second reference to the same memory
+- as many immutable borrows as you like
+- borrowed reference must have equal or lesser scope
+- lifetime is half of the safety (always valid)
+- immutability is the other half (no race condition)
+
+---
+
+# Borrow Checker
+
+```rust
+fn main() {
+  let x = box 2014u;
+
+  { // introduce new scope
+    let y = &x;
+    println!("x: {}, y: {}", x, y);
+  } // y is dropped
+
+  println!("{}", x);
+} // x is dropped
+```
+
+^
+- compiler subsystem
+- your new best friend / worst enemy
+- compiler marks regions of scope
+- owner responsible for allocating and freeing
+- We can't forget to free our memory. (valgrind)
+- borrow checker makes this safe at compile time
+
+---
+
+# Strings Revisited
+
+```rust
+use std::ascii::AsciiExt;
+
+fn main() {
+  let polite: &str = "Hello";
+  let rude: String = polite.to_ascii_uppercase();
+
+  println!("{} is polite.", polite);
+  println!("{} is rude.", rude);
+
+  // polite is dropped, but it owns nothing
+  // rude is dropped, its owned str primitive is dropped
+}
+```
+
+^
+- str is the fundamental string primitive
+- this starts to make sense
+- the static string is never owned, but is valid for the lifetime of the process
+- so just borrow it
+- Strings are heap allocated, owned values
+
+
+---
+
+# Why Ownership?
+
+```rust
+fn main() {
+  let x: Vec<Color> = vec![Color::Red, Color::Green, Color::Red];
+
+  // if we shallow copied...
+  let y = x;
+
+  // x frees its vector contents
+  // y frees the *same* vector contents
+  // double free! SEGFAULT
+}
+```
+
+^
+- Vector contents are heap allocated, owned by the Vec
+- shallow copy
+- x and y both believe they own the Colors, and will free them
+- x, stack allocated pointer to that memory
+- y is another stack allocated pointer, same memory
+
+---
+
+# Ownership Saves the Day
+
+```rust
+fn main() {
+  let x: Vec<Color> = vec![Color::Red, Color::Green, Color::Red];
+
+  // the ownership of the vec *moves* to y
+  let y = x;
+
+  println!("{}", y); // => ok, y owns it
+
+  println!("{}", x); // => error! use of moved value
+
+  // x is already invalidated
+  // y frees the vector contents
+}
+```
+
+^
+- compiler spots this, prevents it
+- anything non-copy-able is ownership based
+- we'll talk about Copy shortly
+- boxes can't be copied, ownership must be moved
+
+---
+
+# Movement & Borrowing
+
+```rust
+fn main() {
+  let x = box Color::Green;  // x is the owner of memory
+
+  let y = &x;         // y borrows x
+
+  // everyone can read immutably borrowed memory!
+  println!("{}", x);  // ok!
+  println!("{}", y);  // ok!
+
+  let k = x;
+  // => error: cannot move out of `x` because it is borrowed
+}
+```
+
+^
+- ownership can only pass when they own it wholely. no borrows.
+- you cannot "sell" something someone is borrowing
+
+---
+
+# ~~Moving~~ Copying Borrowed References
+
+```rust
+fn main() {
+  let x = box Color::Green;  // x is the owner of memory
+
+  let y = &x;         // y borrows x
+
+  // everyone can read immutably borrowed memory!
+  println!("{}", x);  // ok!
+  println!("{}", y);  // ok!
+
+  // *copy* the reference to the Box
+  let k = y;
+  println!("{}", k);  // ok!
+  println!("{}", y);  // ok!
+}
+```
+
+^
+- borrowed references can be copied
+- the owner retains ownership
+- all the borrows must still live less time than the owner
+- but the "borrow" metaphor breaks down
+- two people can "borrow" your copy of a BluRay...
+
+---
+
+#[fit] Ownership Returning Functions
+
+```rust
+fn fresh_pot() -> Coffee {
+  Coffee::Hot(212)
+}
+
+fn main() {
+    let cup = box fresh_pot();
+    drink_coffee(cup);
+}
+
+fn dangling_pointer() -> &Coffee {
+  let failure = Coffee::Instant;
+  &failure
+}
+
+```
+
+^
+- function can pass ownership back to the calling scope
+- prefer returning unboxed values
+- caller preference/flexibility whenever possible
+- can't return dangling pointers! mem-leaks / segfaults
+
+---
+
+#[fit] Ownership Taking Functions
+
+```rust
+fn drink_coffee(owned: Box<Coffee>) {
+  if is_acceptable(&*owned) {
+    println!("Bliss...");
+  } else {
+    println!("This is unacceptable!");
+  }
+}
+
+fn is_acceptable(borrowed: &Coffee) -> bool {
+  match *borrowed {
+    Coffee::Iced(x) if x => true,
+    Coffee::Hot(temp) if temp > 140 => true,
+    _ => false,
+  }
+}
+```
+
+^
+- functions arguments can also take ownership (default)
+- will copy if possible
+- the function scope becomes 'owning scope'
+
+---
+
+# *Why* take Ownership?
+
+^
+- conversely, why give ownership away?
+
+---
+
+# Why take Ownership?
+
+![](./images/containers.jpg)
+
+^
+- largely, containers
+- allows the container to control the life of the data
+- vice versa -> pop returns ownership
+- avoiding ownership movement is usually preferable
+- references are cheap & safe!
+
+---
+
+# Slices
+
+```rust
+fn main() {
+  let vector: Vec<uint> = vec![1, 2, 3];
+  let v_slice: &[uint] = vector.as_slice();
+
+  println!("{} and {} are the same *exact* data!",
+           vector, v_slice);
+
+  for i in v_slice.iter() {
+    println!("{} from slice!", i);
+  }
+}
+```
+
+^
+- string slices aren't unique
+- views into existing data
+- free operations, pointer
+- borrow checker ensures this is always valid & safe
+- 29 "as_slice()" methods
+- many useful operations on slices, iterator
+
+---
+
+# Let's Build a !
+
+^
+- wheeww! that was a lot!
+
+
+---
+
+# Polymorphic Types
+
+```rust
+fn main() {
+  let file_size: Result<u64, String> = Ok(2_000_000);
+  let cup: Result<Coffee, String> = Ok(Coffee::Hot(150));
+
+  let vector: Vec<u32> = vec![1, 2, 3, 4, 5];
   let map: HashMap<String, f64> = HashMap::new();
 
-  let possible_value: Option<f64> = map.find("foo");
-  match possible_value {
-    None => println!("Oh no! That key didn't exist!"),
-    Some(value) => println!("Found target {}", value)
-  }
+  let opt: Option<Vec<uint>> = Some(vector);
 }
 ```
 
@@ -670,21 +1423,22 @@ fn main() {
 - explicit type annotation for clarity
 - allow us to build generic data structures
 - compile time idea, monomorphization
+- this is one type of polymorphism offered by rust
 
 ---
 
 # [fit] Polymorphism
 #### (poly = many) + (morph = shape)
 
-Subtyping
-
 Parametric Polymorphism
+
+Subtyping
 
 Ad-hoc Polymorphism
 
 ^
-- inheritance (runtime)
 - generics: works identically for any type
+- inheritance (runtime)
 - function overloading (compile time)
 - type classes (compile time)
 - traits: different behavior, decided by type
@@ -694,20 +1448,19 @@ Ad-hoc Polymorphism
 # [fit] Polymorphism
 #### (poly = many) + (morph = shape)
 
-Subtyping = ~~Inheritance~~
-
 Parametric Polymorphism = `Vec<T>`
+
+Subtyping = ~~Inheritance~~
 
 Ad-hoc Polymorphism = ~~Overloading~~ & Traits
 
 ^
-- subtyping: complex call heirarchy
-- truly favoring composition over inheritance
 - generics: well supported
+- subtyping: complex call heirarchy/inference
+- truly favoring composition over inheritance
 - overloading (not supported)
 - traits: define abilities/restrictions
-- similar to, but different than Java interfaces
-
+- similar to, but more flexible than Java interfaces
 
 ---
 
@@ -736,6 +1489,7 @@ fn main() {
 - trait implementation
 - resolution at compile time
 - implementation of triangle, square, and hexagon omitted
+- not a is_a relationship
 
 ---
 
@@ -831,7 +1585,7 @@ extern crate traffic;
 use traffic::Color;     // <-- imported Color enum from `traffic` module
 
 fn main() {
-  let stoplight = Red;
+  let stoplight = Color::Red;
   println!("Imported a {} stoplight!", stoplight);
 }
 ```
@@ -920,315 +1674,6 @@ cargo doc
 
 ---
 
-# [fit] Rust
-## for the
-# Advanced Beginner
-
-^
-- last time was fun
-- today we cover hard stuff
-- unique features
-- practical stuff
-
----
-
-![fit](./images/brain.png)
-
-^
-- follows the explicit & safe goals
-- GC isn't explicit, predictable, safe, or easily concurrent
-
----
-
-![](./images/ram2.jpg)
-
-^
-- memory mgt is a tradeoff
-- often dangerous
-- very efficient
-- realized i don't know much
-
----
-
-![](./images/memory2.jpg)
-
-^
-- ruby/javascript very opaque.
-- when does ruby allocate memory?
-
----
-
-# Stack & Heap Memory
-
-```rust
-fn main() {
-  let stack: Color = Red;
-  let heap: Box<Color> = box Green;
-
-  println!("stack: {}, heap: {}", stack, heap);
-
-  // end of scope, memory gets freed
-}
-```
-
-^
-- stack? heap? help!
-- stack =~ completely local variables
-- heap =~ malloc =~ passed between fns
-- heap allocations stick around after we `return`
-
----
-
-# Stack & Heap Memory
-
-```rust
-fn main() {
-  let stack: Color = Red;
-
-  let heap: Box<Color> = box Green;
-  // C: int *ptr = malloc(sizeof(Color));
-
-  println!("stack: {}, heap: {}", stack, heap);
-
-  // end of scope, memory gets freed
- // C: free(heap);
-}
-```
-
-^
-- no manual malloc/free
-- mess this up => apocolypse begins
-- no garbage collection, compile time!
-- heap overflow => attack
-- stack overflow => dev error
-
----
-
-# Ownership
-
-```rust
-fn main() {
-  let r = box Red;  // allocate some memory
-
-  println!("the value of r: {}", r);  // access value of r
-
-  let color = r;  // transfer ownership
-
-  println!("the value of color: {}", color);  // access value of color
-
-  println!("the value of color: {}", r);  // => error: use of moved value: `r`
-
-  // owner falls out of scope, freeing memory
-}
-```
-
-^
-- key/unique concept in rust
-- single owner
-- safe memory management
-- many other features fall out of this idea
-
----
-
-# Borrowing
-
-```rust
-fn main() {
-  let r = box Red;  // allocate some memory
-
-  println!("the value of r: {}", r);  // access value of r
-
-  let color = &r;  // borrow a reference
-
-  println!("the value of color: {}", color);  // access borrowed value
-
-  println!("the value of color: {}", r);  // access owned value
-
-  // owner & borrower fall out of scope
-  // owner frees memory
-}
-```
-
-^
-- second reference to the same memory
-- immutability makes this safe
-- as many immutable borrows as you like
-
----
-
-# Borrow Checker
-
-```rust
-fn main() {
-  let x = box 2014u;
-
-  {                       // introduce new scope
-    let y = 0i;
-    println!("x: {}, y: {}", x, y);
-  }                       // y falls out of scope, memory is freed
-
-  println!("{}", x);
-}                         // x falls out of scope, memory is freed
-```
-
-^
-- compiler subsystem
-- compiler marks regions of scope
-- owner responsible for allocating and freeing
-- We can't forget to free our memory. (valgrind)
-- borrow checker makes this safe at compile time
-
----
-
-# Copying
-
-```rust
-fn main() {
-  let x = Red; // on stack
-  let y = x;   // copied!
-
-  println!("{}", x); // => ok
-  println!("{}", y); // => ok
-
-  // x frees its copy
-  // y frees its copy
-}
-```
-
-^
-- non-boxed values are copied!
-- byte for byte copy (memcpy)
-- each an owner of its own memory
-- shallow copy
-
----
-
-# Why Ownership on the Heap?
-
-```rust
-fn main() {
-  let x: Vec<Color> = vec![Red, Green, Red];
-
-  // if we copied...
-  let y = x;
-
-  // x frees its vector contents
-  // y frees the *same* vector contents
-  // double free!
-}
-```
-
-^
-- Vector contents are heap allocated
-- shallow copy
-- x, stack allocated pointer to that memory
-- y is another stack allocated pointer, same memory
-
----
-
-# Ownership Saves the Day
-
-```rust
-fn main() {
-  let x: Vec<Color> = vec![Red, Green, Red];
-
-  // the ownership of the contents moves to y
-  let y = x;
-
-  println!("{}", y); // => ok
-
-  println!("{}", x); // => error! use of moved value
-
-  // x is already invalidated
-  // y frees the vector contents
-}
-```
-
-^
-- compiler spots this, prevents it
-- anything non-copy-able is ownership based
-
----
-
-# Movement & Borrowing
-
-```rust
-fn main() {
-  let x = box Green;  // x is the owner of memory
-
-  let y = &x;         // y *borrows* x
-
-  println!("{}", x);  // ok!
-  println!("{}", y);  // ok! everyone can read immutably borrowed memory!
-
-  let k = x;
-  // => error: cannot move out of `x` because it is borrowed
-
-  // y is just a stack allocated pointer
-  // x is the owner, so x frees the memory
-}
-```
-
-^
-- ownership can only pass when they own it wholely. no borrows.
-
----
-
-# Ownership w/ Functions
-
-```rust
-fn advance_light(owner: Box<Color>) -> Box<Color> {
-  match *owner {
-    Red => box Green,
-    Yellow => box Red,
-    Green => box Yellow
-  }
-  // `owner` owns the memory. falls out of scope and frees it.
-}
-
-fn peek(borrower: &Box<Color>) -> Color {
-  match **borrower {
-    Red => Green,
-    Yellow => Red,
-    Green => Yellow
-  }
-  // `borrower` falls out of scope. nothing happens.
-}
-```
-
-^
-- functions can also take ownership
-- the function scope becomes owning scope
-- function can pass ownership back to the calling scope
-- stack values still passed by value => copied
-
----
-
-# Ownership w/ Functions
-
-```rust
-fn main() {
-  let stoplight: Box<Color> = box Green;
-  let next_color: Color = peek(&stoplight);
-
-  println!("{} will change to {}", stoplight, next_color);
-
-  let new_light: Box<Color> = advance_light(stoplight);
-  println!("Changed to {}", new_light);
-
-  println!("Original Light {}", stoplight);
-  // => error: use of moved value: `stoplight`
-}
-```
-
-^
-- pass by value default (copy)
-- avoid taking ownership to keep from freeing
-- return ownership
-- can't return dangling pointers! mem-leaks / segfaults
-
----
-
 # Mutability
 
 ```rust
@@ -1259,7 +1704,7 @@ fn main() {
 
 ```rust
 fn main() {
-  let mut x = box Red;
+  let mut x = box Color::Red;
 
   {
     let y = &mut x;
@@ -1268,13 +1713,13 @@ fn main() {
     // => error! cannot borrow `x` as
     //           mutable more than once at a time
 
-    x = box Yellow;
+    x = box Color::Yellow;
     // => error! cannot assign to `x` because it is borrowed
 
-    *y = box Green; // => ok!
+    *y = box Color::Green; // => ok!
   }
 
-  println!("{}", x); // => Green
+  println!("{}", x); // => Color::Green
 }
 ```
 
@@ -1340,78 +1785,6 @@ fn main() {
 
 ---
 
-# Strings
-
-```rust
-use std::ascii::StrAsciiExt;
-
-fn main() {
-  let polite = "Hello";
-  let rude = polite.to_ascii_upper();
-
-  println!("{} is polite.", polite);
-  println!("{} is rude.", rude);
-}
-```
-
-^
-- That took a while to get here...
-- Ruby doesn't care, it copies
-- Rust is very careful with strings
-- valid utf8 seq
-- Follows mutability rules
-- StrAsciiExt trait adds methods
-
----
-
-# String Slices
-
-```rust
-use std::ascii::StrAsciiExt;
-
-fn main() {
-  let polite: &'static str = "Hello";   // string slice
-  let rude: String = polite.to_ascii_upper(); // string
-
-  println!("{} is polite.", polite);
-  println!("{} is rude.", rude);
-}
-```
-
-^
-- Two types
-- 'static is a lifetime
-- str is the primative string type
-- Strings are allocated
-
-
----
-
-# Slices
-
-```rust
-fn main() {
-  let vector: Vec<uint> = vec![1, 2, 3];
-  let v_slice: &[uint] = vector.as_slice();
-
-  println!("{} and {} are the same *exact* data!",
-           vector, v_slice);
-
-  for i in v_slice.iter() {
-    println!("{} from slice!", i);
-  }
-}
-```
-
-^
-- 29 "as_slice()" methods
-- free operations, pointer
-- views into existing data
-- borrow checker ensures this is always valid & safe
-- many useful operations on slices, iterator
-
----
-
 # Iterators
 
 ```rust
@@ -1442,7 +1815,7 @@ for n in range(0u, 10) {
 
 ```rust
 fn main() {
-  let seq: [Color, ..3] = [Green, Yellow, Red];
+  let seq: [Color, ..3] = [Color::Green, Color::Yellow, Color::Red];
   let timing: Vec<uint> = vec![20u, 4u, 10u];
 
   let mut stoplight = seq.iter().zip(timing.iter()).cycle();
@@ -1849,3 +2222,8 @@ schematic.jpg https://secure.flickr.com/photos/zdepth/8227198392/
 coffee.jpg https://www.flickr.com/photos/windysydney/4082857429
 coffee2.jpg https://www.flickr.com/photos/captainmcdan/76555293/
 cold_brew.jpg https://www.flickr.com/photos/juanomatic/8482277443
+private_property.jpg https://www.flickr.com/photos/simplemoth/3272906086
+rustacean.png http://www.rustacean.net/
+research.jpg https://www.flickr.com/photos/paulspace/10388748353
+cleanup.jpg https://www.flickr.com/photos/atmtx/4912285187
+containers.jpg https://www.flickr.com/photos/timcaynes/352901749
