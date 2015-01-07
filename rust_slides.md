@@ -45,6 +45,7 @@ Alex Burkhart | @saterus | Neo Innovation
 ^
 - 1.0.0-alpha is being released this friday
 - exciting week: soul-crushing amount of breaking changes this week
+- any of this may have changed in the past 48 hours
 - astonishing amount of work being done
 - best run project i've ever seen
 - most libraries have been mostly-broken for the last 2-3 weeks
@@ -1520,6 +1521,7 @@ fn main() {
 - trait definition
 - trait implementation
 - resolution at compile time
+- no orphans
 - implementation of triangle, square, and hexagon omitted
 - not a is_a relationship
 
@@ -1960,6 +1962,32 @@ fn main() {
 
 ---
 
+# Iterators.next()
+
+```rust
+let mut r = range(0u, 10);
+loop  {
+  match r.next() {
+    None => break,
+    Some(n) => {
+      println!("n: {}" , n);
+    }
+  }
+}
+
+for n in range(0u, 10) {
+  println!("n: {}" , n);
+}
+```
+
+^
+- syntactic sugar
+- loop is while(true) w/ compiler hints
+- for calls .next() on iterators
+- completely equivalent
+
+---
+
 # Randomness
 
 ```rust
@@ -1979,15 +2007,15 @@ fn main() {
 
 ---
 
-# Let's Build a Monster!
+# Let's Build a BattleBot!
 
-1. Make a Monster struct.
+1. Make a BattleBot struct.
 1. Make functions that heal it, or hurt it.
 1. Make a Weapon type.
-1. Make a function that prints all the monsters's weapons.
+1. Make a function that prints all the bot's weapons.
 1. Make an attack function.
-1. impl Rand for Monster
-1. Make a random Monster battle royale!
+1. impl Rand for BattleBot
+1. Make a randomly generated BattleBot royale!
 
 ^
 - we've covered a lot again, but now we can really start using our skills
@@ -2003,12 +2031,12 @@ fn main() {
 ```rust
 // in project_a/src/traffic/color.rs
 mod traffic {
-  pub enum Color { ... }
+  pub enum Color { Red, Yellow, Green };
 }
 
 // in project_b/src/main.rs
-extern crate traffic;
-use traffic::Color;     // <-- imported Color enum from `traffic` module
+extern crate project_a; // link to project_a
+use traffic::Color; // import type from `traffic` module
 
 fn main() {
   let stoplight = Color::Red;
@@ -2017,8 +2045,96 @@ fn main() {
 ```
 
 ^
+- let's switch gears real quick for more practical subject
 - modules encapsulate data, fns, & traits
 - explicit imports of modules & types
+- import Traits to get access to new fns
+- importing bare functions is possible, but discouraged
+
+---
+
+# Namespaced Enums
+
+```rust
+// in project_a/src/traffic/color.rs
+mod traffic {
+  pub enum Color { Red, Yellow, Green };
+}
+
+// in project_b/src/main.rs
+extern crate project_a;
+use traffic::Color{Red,Yellow,Green};
+
+fn main() {
+  let stoplight = Red;
+  println!("Imported a {} stoplight!", stoplight);
+}
+```
+
+^
+- prevents weird namespacing issues
+- import the variants too, best of both worlds
+- this is how Option/Result unnamespaced
+
+---
+
+# Private Struct Fields
+
+```rust
+// in project_a/src/graphics/point.rs
+mod graphics {
+    #[derive(Show)]
+    pub struct Point {
+        pub x: f64,
+        pub y: f64,
+        _hidden: u8,
+    }
+
+    impl Point {
+      pub fn origin() -> Point {
+        Point { x: 0.0, y: 0.0, _hidden: 157 }
+      }
+    }
+}
+
+// in project_b/src/main.rs
+extern crate project_a;
+use graphics::Point;
+
+fn main() {
+  let p1 = Point::origin();
+  println!("Imported a: {}", p1);
+  // => Imported a: Point { x: 0, y: 0, _hidden: 157 }
+}
+```
+
+^
+- default is actually private
+- requires you define some sort of constructor fns
+- default derived Show shows private fields
+
+---
+
+# Re-Exports
+
+```rust
+// in project_a/src/traffic/color.rs
+mod traffic {
+  pub enum Color { Red, Yellow, Green };
+}
+
+// in project_b/src/city_planning/roadways.rs
+extern crate project_a;
+pub use traffic::Color{Red,Yellow,Green};
+
+// in project_c/src/main.rs
+extern crate project_b;
+use city_planning::roadways::Color;
+```
+
+^
+- create a public interface, hide implementation
+- the prelude is actually *empty*
 - follows familiar ruby file structure
 
 ---
@@ -2042,10 +2158,10 @@ rustc/src/librand
 ```
 
 ^
-- `rand` Crate ships with rust, not re-exported by std.
+- `rand` Crate ships with rust, not re-exported by the prelude.
 - map file structure to module structure
 - break up modules into appriopriately small pieces
-- this is totally what you expect in a web structured gem
+- this is totally what you expect in a well structured gem
 
 ---
 
@@ -2061,25 +2177,22 @@ rustc/src/librand
 
 # Crates
 
-Unit of Compilation
-
-Single Executable or Library
-
-`rand::*` is merged together before compilation
-
-`extern crate rand` directs us to link to the external `rand` crate
+![](./images/crate.jpg)
 
 ^
+- unit of compilation
+- exe or lib
+- all submodules merged together, then compiled
 - single compiled artifact per crate
+- extern keyword
 - no headers required!
 - link and then use!
-- importing C libraries is so painful, we all rebuild strings
 
 ---
 
 # Cargo Package Manager
 
-Ruby Gems + Bundler
+Ruby Gems + Bundler + rubygems.org
 
 ```bash
 cargo new
@@ -2092,55 +2205,94 @@ cargo doc
 `Cargo.toml` & `Cargo.lock` list and lock deps
 
 ^
-- alpha, built by ex-Bundler team
 - modern & opinionated package management
 - interesting challenge with compiled binaries
-- i've had small problems with bitrot already
 - hope to avoid cabal hell
 
 ---
 
-# Iterators
+# Cargo.toml
 
-```rust
-let mut r = range(0u, 10);
-loop  {
-  match r.next() {      // => Iterator::next() returns an Option
-    None => break,
-    Some(n) => {
-      println!("n: {}" , n);
-    }
-  }
-}
+```
+[package]
 
-for n in range(0u, 10) {
-  println!("n: {}" , n);
-}
+name = "testing"
+version = "0.0.1"
+authors = ["Alex Burkhart <saterus@gmail.com>"]
+
+[dependencies]
+stainless = "~0.0.3"
+
+[dependencies.time]
+git = https://github.com/rust-lang/time.git
 ```
 
 ^
-- syntactic sugar
-- loop is while(true) w/ compiler hints
-- for calls .next() on iterators
-- completely equivalent
+- dependency list
+- semantic versioning
+- .lock file
+- libraries ignore .lock
+- apps commit .lock
+- slides don't undestand toml syntax...
 
 ---
 
+# Crates.io
 
+![](./images/crates_io.png)
+
+^
+- community package repo
+- publish & download deps w/ cargo
+- built with modern rust!
 
 ---
 
-# Tasks
+# Documentation
+
+![](./images/std_docs.png)
+
+^
+- now that we understand modules
+- rustdoc is pretty sweet
+- even internal stuff is documented
+- stability markers
+- stability dashboard
+- this week, use nightlies. 1.0 soon.
+
+---
+
+# Let's Read Some Docs!
+
+1. Familiarize yourself with an interesting type
+    * Option
+    * Vec
+    * Box
+    * Iterator
+    * std::io
+1. Get some Coffee!
+1. Profit!
+
+^
+- an exercise on modules would be boring
+- concurrency coming up, keep your brain awake!
+
+---
+
+# Threads
 
 ```rust
+use std::sync::mpsc::channel;
+use std::thread::Thread;
+
 fn main() {
   let (tx, rx) = channel();
 
-  spawn(proc() {
-    tx.send("Data produced in child task");
-  });
+  Thread::spawn(move || {
+    tx.send("Data produced in child task").unwrap();
+  }).detach();
 
-  let data = rx.recv();
+  let data = rx.recv().unwrap();
   println!("{}", data);
   // 1x => Data produced in child task
 }
@@ -2151,48 +2303,55 @@ fn main() {
 - relies on safe memory ownership guarantees
 - transmit/receive, telecom
 - channels are aync 1-way communication
-- proc is a special closure
+- move keyword moves ownership of closed vars into new thread
+- map to OS threads
+- thread panics propogate up to their parent
 
 ---
 
-# Procs
+# Multiple Threads
 
 ```rust
+use std::sync::mpsc::channel;
+use std::thread::Thread;
+
 fn main() {
   let (tx, rx) = channel();
 
-  for task_num in range(0u, 10) {
-    let tx = tx.clone();  // => must copy transmitter before sending
-    spawn(proc() {
-      tx.send("Data produced in child task");
-    });
+  for task_num in range(0u8, 8) {
+    let tx = tx.clone(); // <-- will be captured by thread
+    Thread::spawn(move || {
+      let msg = format!("Task {} done!", task_num);
+      tx.send(msg).unwrap();
+    }).detach();
   }
 
-  for _ in range(0u, 10) {
-    let data = rx.recv();
+  for _ in range(0u8, 8) {
+    let data = rx.recv().unwrap();
     println!("{}", data);
   }
-  // 10x => Data produced in child task
+  // 10x => Task N done!
 }
 ```
 
 ^
-- special closures
-- procs own their memory
+- threads are meta-owners of their memory
 - ie. ownership is moved
 - common answer is clone()
 - many tx, one rx
 
 ---
 
-# Big Data Syncs!
+#[fit] Big Data Syncs!
 
 ```rust
-use std::sync::Arc;       // => foreshadowing...
+use std::sync::Arc;
+use std::sync::mpsc::channel;
+use std::thread::Thread;
 
 #[derive(Show)]
 struct HugeStruct {
-  huge_name: String
+  huge_name: String // probably additional fields...
 }
 
 impl HugeStruct {
@@ -2210,14 +2369,14 @@ impl HugeStruct {
 
 ---
 
-# Shared Immutable Memory
+#[fit] Shared Immutable Memory
 
 ```rust
 fn main() {
   let (tx, rx) = channel();
   let huge_struct = Arc::new(HugeStruct::new());
 
-  for task_num in range(0u, 10) {
+  for task_num in range(0u8, 8) {
     let tx = tx.clone();
     let huge_struct = huge_struct.clone();
     spawn(proc() {
@@ -2237,111 +2396,97 @@ fn main() {
 - atomic read/write access
 - cloning Arcs is cheap
 - increment internal counter
-- interesting: auto-deref
-- locking, less than ideal
 - Rc for non-atomic ops
+- lock free!
+- very fun code to read through
 
 ---
 
-# JSON Serialization
+#[fit] Shared _Mutable_ Memory
 
 ```rust
-extern crate serialize;
-use serialize::json::{Json, ToJson, Object};
-use std::collections::TreeMap;
+use std::io::timer::sleep;
+use std::rand;
+use std::sync::Arc;
+use std::sync::Mutex;
+use std::sync::mpsc::channel;
+use std::thread::Thread;
+use std::time::duration::Duration;
 
 #[derive(Show)]
-struct User {
-  id: u64,
-  name: String,
-  friends: Vec<u64>
+struct HugeStruct {
+  huge_name: String,
+  access_count: u8
 }
 
+impl HugeStruct {
+  fn new() -> HugeStruct {
+    HugeStruct { huge_name: "I'M HUGE".to_string(), access_count: 0 }
+  }
+}
+
+fn random_sleep() {
+    let n = rand::random::<i64>() % 10;
+    let duration = Duration::milliseconds(n * n);
+    sleep(duration);
+}
 ```
 
 ^
-- how does a static language do json?
-- enums!
+- but what if we want to mutate?
+- add an access count
+- we're going to need to sleep for a random duration...
 
 ---
 
-# ToJson
+
+#[fit] Shared _Mutable_ Memory
 
 ```rust
-impl ToJson for User {
-  fn to_json(&self) -> Json {
-    let mut map = TreeMap::new();
-    map.insert("id".to_string(), self.id.to_json());
-    map.insert("name".to_string(), self.name.to_json());
-    map.insert("friends".to_string(), self.friends.to_json());
-    Object(map)   // => enum value for Json type
+fn main() {
+  let (tx, rx) = channel();
+  let huge_struct = HugeStruct::new();
+  let huge_struct = Arc::new(Mutex::new(huge_struct));
+
+  for task_num in range(0u8, 8) {
+    let tx = tx.clone();
+    let huge_struct = huge_struct.clone(); // clone the arc
+    Thread::spawn(move || {
+      random_sleep(); // <-- without this, they always grab the lock in spawn order
+      let mut inner_struct = huge_struct.lock().unwrap();
+      inner_struct.access_count += 1;
+      let msg = format!("Task {}: Accessed Count {}", task_num, inner_struct.access_count);
+      tx.send(msg).unwrap();
+    }).detach();
+  }
+  drop(tx); // => force last transmitter to hang up
+
+  for data in rx.iter() {
+    println!("{}", data); // 10x => Task N: Accessed I'M HUGE
   }
 }
 ```
 
----
-
-# Json Output
-
-```rust
-fn main() {
-  let brenda = User {
-    id: 1,
-    name: "BrendaTheSuccessfulDieter".to_string(),
-    friends: vec![4,47,92]
-  };
-
-  println!("brenda.show(): \n{}\n", brenda);
-  println!("brenda.to_json(): \n{}", brenda.to_json());
-}
-```
-
-```
-~ rustc verbose_json.rs && ./verbose_json
-brenda.show():
-User { id: 1, name: BrendaTheSuccessfulDieter, friends: [4, 47, 92] }
-
-brenda.to_json():
-{"friends":[4,47,92],"id":1,"name":"BrendaTheSuccessfulDieter"}
-```
+^
+- mutexes are just one of many concurrency tools
+- lock() returns a guard
+- drop() will unlock it
 
 ---
 
-# Json Deriving!
+# Let's Implement DEFLATE!
 
-```rust
-extern crate serialize;
-use serialize::json;
+1. Wiki the DEFLATE algorithm
+1. Break off a small part of the problem
+1. Victory!
+1. Decide to parallelize what you can
+1. Enlightenment Achieved!
 
-#[derive(Show,Encodable)]
-struct User {
-  id: u64,
-  name: String,
-  friends: Vec<u64>
-}
-
-fn main() {
-  let brenda = User {
-    id: 1,
-    name: "BrendaTheSuccessfulDieter".to_string(),
-    friends: vec![4,47,92]
-  };
-
-  println!("brenda.show(): \n{}\n", brenda);
-  println!("brenda.to_json(): \n{}", json::encode(&brenda));
-}
-```
-
----
-
-# Decoding Json
-
-```rust
-#[derive(Show,Encodable,Decodable)]
-struct User {
-*snip*
-```
-# Completely ran out of time last night...
+^
+- with all the libraries broken
+- well known, but meaty problem
+- touches a lot of std library
+- you'll struggle with problem solving
 
 ---
 
@@ -2355,30 +2500,15 @@ struct User {
 
 ---
 
-# Unofficial Documentation
+# Thanks!
 
-- http://rustbyexample.com/
-- http://www.rustforrubyists.com/
-- https://aturon.github.io/
+## Alex Burkhart
 
----
+## @saterus
 
-![](./images/play.rust.png)
+## Neo Innovation
 
-^
-- interactive
-- nice for short tests
-- integration with irc room
-
----
-
-![](./images/trending_repos.png)
-
-^
-- rustc & servo
-- cargo
-- iron
-- nes emulator
+![](./images/office.jpg)
 
 ---
 
@@ -2420,3 +2550,4 @@ rustacean.png http://www.rustacean.net/
 research.jpg https://www.flickr.com/photos/paulspace/10388748353
 cleanup.jpg https://www.flickr.com/photos/atmtx/4912285187
 containers.jpg https://www.flickr.com/photos/timcaynes/352901749
+crates.jpg https://www.flickr.com/photos/lexnger/2061061452
