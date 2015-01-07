@@ -1608,6 +1608,21 @@ impl<T: Show> Show for Vec<T> {
 
 ---
 
+# Automatic Compiler Deriving
+
+```rust
+#[derive(Show,PartialEq,PartialOrd,Copy)]
+struct Point {
+  x: f64,
+  y: f64
+}
+```
+
+^
+- cut out some of the boilerplate code
+
+---
+
 # Kinds
 
 - Copy: `memcpy` friendly
@@ -1726,18 +1741,16 @@ fn main() {
 ```rust
 fn main() {
   let ten = 10_i64;
+
   let plus_ten = |value| ten + value;
   let minus_ten = |value: i64| -> i64 {
     value - ten
   };
 
-  let x = 0_i64;
-  let y = 1000_i64;
+  println!("{} + {} = {}", ten, 4, plus_ten(4));
+  println!("{} + {} = {}", ten, 2000, plus_ten(2000));
 
-  println!("{} + {} = {}", ten, x, plus_ten(x));
-  println!("{} + {} = {}", ten, y, plus_ten(y));
-
-  println!("{} - {} = {}", ten, x, minus_ten(x));
+  println!("{} - {} = {}", -90, ten, minus_ten(-90));
 }
 ```
 
@@ -1746,7 +1759,7 @@ fn main() {
 - capture variable scope
 - infer types
 - build higher order functions in the stdlib
-- what? function pointers in c? ha!
+- much easier to use than c's function pointers
 - much of the stdlib looks like ruby, taking blocks/closures
 
 ---
@@ -1754,28 +1767,234 @@ fn main() {
 # Closures (cont.)
 
 ```rust
-extern crate num;
-use num::integer::Integer;
-
 fn main() {
-  let nums: Vec<uint> = range(0, 100).collect();
+  let nums = range(0, 100).collect::<Vec<u32>>();
 
-  let squares: Vec<uint> = nums.move_iter()
-                               .map(|n| n * n )
-                               .filter(|n| n.is_even() )
-                               .skip(5)
-                               .take(10)
-                               .collect();
+  let even_cubes: Vec<u32> = nums.into_iter()
+                                 .map(|n| n * n * n )
+                                 .filter(|n| *n % 2 == 0 )
+                                 .skip(5)
+                                 .take(10)
+                                 .collect();
 
-  println!("squares: {}", squares);
+  println!("even_cubes: {}", even_cubes);
 }
 ```
 
 ^
 - Iterator provides a lot of closure consuming fns
 - very ruby-block like interfaces
-- notice the import statement.
-- new traits added, numbers learn new tricks.
+
+---
+
+# Iterator
+
+```rust
+trait Iterator<A> {
+  fn next(&mut self) -> Option<A>;
+}
+
+fn main() {
+  for n in range(0u32, 10) {
+    println!("n: {}", n);
+  }
+}
+```
+
+^
+- external iterator, holds the iteration state
+- possibly infinite
+- for loops work on all iterators
+- call next until None
+
+---
+
+# Iterators.next()
+
+```rust
+fn main() {
+  let seq: [Color; 3] = [
+    Color::Green, Color::Yellow, Color::Red
+  ];
+  let timing: Vec<uint> = vec![20u, 4u, 10u];
+
+  let mut stoplight = seq.iter()
+                         .zip(timing.iter())
+                         .cycle();
+
+  for (color, time) in stoplight {
+    println!("{} for {}s", color, time);
+  }
+}
+```
+
+^
+- very flexible, composable
+- specifically different than the underlying container
+- keen observers have noticed...
+- iterators must be mutable
+- for vec, the iterator must know which is the current iteration index
+
+---
+
+# Mutability
+
+![](./images/danger_faded.jpg)
+
+^
+- alex, why can't we build real programs yet?
+
+---
+
+# Mutability
+
+```rust
+fn main() {
+  let x = box Color::Red;
+  *x = Color::Green;
+  // => error: re-assignment of immutable variable `x`
+
+  // move to mutable ownership
+  let mut y = x;
+  *y = Color::Green;
+
+  // move to immutable ownership
+  let z = y;
+
+  println!("{}", z);
+}
+```
+
+![](./images/danger_faded.jpg)
+
+^
+- mutability is *really* handy
+- explicitly marked as such
+- encoded in the type system
+- keep everything as immutable as possible, allow local mutation
+- ruby marks *some* methods with ! to indicate mutation
+
+---
+
+# Mutability is Greedy
+
+```rust
+fn main() {
+  let mut x = box Color::Red;
+
+  {
+    let y = &mut x;
+    let z = &mut x;
+    // => error! cannot borrow `x` as
+    //           mutable more than once at a time
+
+    x = box Color::Yellow;
+    // => error! cannot assign to `x`
+    //           because it is borrowed
+
+    *y = box Color::Green; // => ok!
+  }
+
+  println!("{}", x); // => Color::Green
+}
+```
+
+^
+- strict rules about actually mutating stuff
+- scope/lifetime based. if y falls out of scope...
+
+---
+
+# Mutability w/ Functions
+
+```rust
+fn update_position(point: &mut Point, x: f64, y: f64) -> () {
+  point.x = x;
+  point.y = y;
+}
+
+fn reset(point: &mut Point) -> () {
+  update_position(point, 0.0, 0.0);
+}
+
+fn dup(original: &Point) -> Point {
+  Point {
+    x: original.x,
+    y: original.y
+  }
+}
+```
+
+^
+- this is explicit
+- mutability encoded in the types!
+- staticly checked, no accidental race conditions
+
+---
+
+# Mutability w/ Functions (cont.)
+
+```rust
+fn main() {
+  let foo: Point = Point { x: 25.0, y: 25.0 };
+  reset(&mut foo); // => error! can't take mutable reference of immutable variable
+
+  let mut foo = foo;                    // transfer ownership to mutable scope
+  {
+      let ref_foo = &foo;               // takes a immutable reference
+      let bar = dup(ref_foo);
+      println!("Copy: {}", bar);
+                                        // immutable ref to foo falls out of scope
+  }
+  reset(&mut foo);                      // takes a mutable reference
+
+  println!("New Position: {}", foo);
+}
+```
+
+^
+- mutability is a little bit of a hassle.
+- that's a Good Thing
+- mutable references are exclusive
+- error: cannot borrow `foo` as mutable because it is also borrowed as immutable
+
+---
+
+# Randomness
+
+```rust
+use std::rand;
+
+fn main() {
+  let x: f32 = rand::random();
+  println!("x: {}", x);
+}
+```
+
+^
+- last thing before another exercise, probably helpful
+- many types implement Rand
+- we'll talk more about importing modules when we return
+- if you are using play.rust-lang.org, talk to me or you'll get stuck
+
+---
+
+# Let's Build a Monster!
+
+1. Make a Monster struct.
+1. Make functions that heal it, or hurt it.
+1. Make a Weapon type.
+1. Make a function that prints all the monsters's weapons.
+1. Make an attack function.
+1. impl Rand for Monster
+1. Make a random Monster battle royale!
+
+^
+- we've covered a lot again, but now we can really start using our skills
+- i've deliberately left a lot up to you
+- be creative
+- start simple
+- love to see where you go with this!
 
 ---
 
@@ -1881,117 +2100,6 @@ cargo doc
 
 ---
 
-# Mutability
-
-```rust
-fn main() {
-  let x = box 2014u;
-  *x = 0u; // => error: re-assignment of immutable variable `x`
-
-  let mut y = x; // move to mutable ownership
-  *y = 0u; // good to go
-
-  let z = y; // move to immutable ownership
-
-  println!("{}", z);
-}
-```
-
-![](./images/danger_faded.jpg)
-
-^
-- explicitly marked as such
-- mutability is handy
-- keep memory as immutable as possible, allow local mutation
-- ruby marks *some* methods with ! to indicate mutation
-
----
-
-# Mutability is Greedy
-
-```rust
-fn main() {
-  let mut x = box Color::Red;
-
-  {
-    let y = &mut x;
-
-    let z = &mut x;
-    // => error! cannot borrow `x` as
-    //           mutable more than once at a time
-
-    x = box Color::Yellow;
-    // => error! cannot assign to `x` because it is borrowed
-
-    *y = box Color::Green; // => ok!
-  }
-
-  println!("{}", x); // => Color::Green
-}
-```
-
-^
-- strict rules about actually mutating stuff
-- scope/lifetime based. if y falls out of scope...
-
-
----
-
-# Mutability w/ Functions
-
-```rust
-fn update_position(point: &mut Point, x: f64, y: f64) -> () {
-  point.x = x;
-  point.y = y;
-}
-
-fn reset(point: &mut Point) -> () {
-  update_position(point, 0.0, 0.0);
-}
-
-fn dup(original: &Point) -> Point {
-  Point {
-    x: original.x,
-    y: original.y
-  }
-}
-```
-
-^
-- this is explicit
-- mutability encoded in the types!
-- staticly checked, no accidental race conditions
-
----
-
-# Mutability w/ Functions (cont.)
-
-```rust
-fn main() {
-  let foo: Point = Point { x: 25.0, y: 25.0 };
-  reset(&mut foo); // => error! can't take mutable reference of immutable variable
-
-  let mut foo = foo;                    // transfer ownership to mutable scope
-  {
-      let ref_foo = &foo;               // takes a immutable reference
-      let bar = dup(ref_foo);
-      println!("Copy: {}", bar);
-                                        // immutable ref to foo falls out of scope
-  }
-  reset(&mut foo);                      // takes a mutable reference
-
-  println!("New Position: {}", foo);
-}
-```
-
-^
-- mutability is a little bit of a hassle.
-- that's a Good Thing
-- mutable references are exclusive
-- error: cannot borrow `foo` as mutable because it is also borrowed as immutable
-
----
-
 # Iterators
 
 ```rust
@@ -2018,89 +2126,7 @@ for n in range(0u, 10) {
 
 ---
 
-# Composable Iterators
 
-```rust
-fn main() {
-  let seq: [Color, ..3] = [Color::Green, Color::Yellow, Color::Red];
-  let timing: Vec<uint> = vec![20u, 4u, 10u];
-
-  let mut stoplight = seq.iter().zip(timing.iter()).cycle();
-
-  for (color, time) in stoplight {
-    println!("{} for {}s", color, time);
-  }
-}
-```
-
-^
-- very flexible, composable
-- specifically different than the underlying container
-- iterators must be mutable
-
----
-
-# Iterators of Many Flavors
-
-```rust
-use std::collections::HashMap;
-use std::collections::PriorityQueue;
-
-fn main() {
-  let mut map: HashMap<String, u8> = HashMap::new();
-  let mut queue: PriorityQueue<u8> = PriorityQueue::new();
-
-  for n in range(0u, 10) {
-    map.insert(n.to_string(), std::rand::random());
-    queue.push(std::rand::random());
-  }
-
-  for (k,v) in map.iter() { println!("Map Item: {} => {}", k, v) }
-  for i in queue.iter() { println!("Queue Item: {}", i) }
-}
-```
-
-^
-- very different structures
-- expected unordered hash traversal
-- expected priority-order queue traversal
-
----
-
-# Iterator Traversal
-
-```bash
-$ rustc iterator_flavors.rs && ./iterator_flavors
-Map Item: 7 => 247
-Map Item: 9 => 235
-Map Item: 2 => 52
-Map Item: 0 => 117
-Map Item: 1 => 66
-Map Item: 8 => 191
-Map Item: 4 => 60
-Map Item: 3 => 133
-Map Item: 5 => 220
-Map Item: 6 => 89
-Queue Item: 225
-Queue Item: 218
-Queue Item: 198
-Queue Item: 184
-Queue Item: 46
-Queue Item: 4
-Queue Item: 33
-Queue Item: 17
-Queue Item: 83
-Queue Item: 44
-```
-
-![left](./images/alex-table-flip.gif)
-
-^
-- reasonable explanation?
-- someone even documented this behavior
-- it should at least provide a priority_iter()
-- turns out not *everything* is caught at compile time
-- you can collect it into a sorted vector
 
 ---
 
