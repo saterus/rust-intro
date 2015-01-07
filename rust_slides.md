@@ -1371,6 +1371,34 @@ fn is_acceptable(borrowed: &Coffee) -> bool {
 
 ---
 
+# Methods Revisited
+
+```rust
+impl Coffee {
+  fn drinkable(&self) -> bool {
+    match *self {
+      Coffee::Iced(x) if x => true,
+      Coffee::Hot(120...150) => true,
+      _ => false,
+    }
+  }
+}
+
+fn main() {
+  let cup = box fresh_pot();
+  let drinkable = cup.drinkable();
+  println!("{} is drinkable? {}", cup, drinkable);
+}
+```
+
+^
+- more syntax sugar for self
+- *most* instance methods don't want ownership...
+- avoid taking ownership over self
+- weird concept, but it follows all the rules as expected
+
+---
+
 # Slices
 
 ```rust
@@ -1380,10 +1408,6 @@ fn main() {
 
   println!("{} and {} are the same *exact* data!",
            vector, v_slice);
-
-  for i in v_slice.iter() {
-    println!("{} from slice!", i);
-  }
 }
 ```
 
@@ -1397,11 +1421,18 @@ fn main() {
 
 ---
 
-# Let's Build a !
+#[fit] Let's Build a Better Stoplight
+
+1. Implement a "peek_next" method for your stoplight Color
+1. Heap allocate a Color, borrow it, peek at it with the borrow
+1. Write a "go_through" method for your stoplight Color, return a Result
+1. Don't forget to write your tests!
 
 ^
 - wheeww! that was a lot!
-
+- let's try a few things
+- we still have a few concepts to cover, so we won't spend a *ton* of time here
+- anyone try to reassign their Colors unboxed? move or copy?
 
 ---
 
@@ -1480,6 +1511,7 @@ impl Area for Circle {
 fn main() {
   let c = Circle { radius: 10.0, location: Point::origin() };
   let h = Hexagon { side_length: 10.0, location: Point::origin() };
+
   println!("circle: {}, hexagon: {}", c.area(), h.area());
 }
 ```
@@ -1496,21 +1528,196 @@ fn main() {
 # Trait Bounds
 
 ```rust
-impl List<T> {
-  fn sort<T: PartialOrd>(&self) -> List<T> {
-    // exercise for the reader
-  }
-
-  fn contains<T: PartialEq>(&self, target: T) -> bool {
-    // exercise for the reader
-  }
+impl Eq for String {
+  // details omitted
 }
+
+impl Hash for String {
+  // details omitted
+}
+
+impl<K: Eq + Hash, V> MyHashMap<K,V> {
+  // details omitted
+}
+
+fn main() {
+  let map: HashMap<String, u32> = HashMap::new();
+  // compiles!
+}
+
+// note: not quite the std lib implementations...
 ```
 
 ^
 - restrictions/assumptions to rely on
 - no, i didn't define the List either
 - different restrictions per type
+
+---
+
+# Trait Bounds (cont.)
+
+```rust
+impl Vec<T> {
+
+  fn contains<T: PartialEq>(&self, target: T) -> bool {
+    // details omitted
+  }
+
+  fn sum<T: Add<T>>(&self) -> T {
+    // details omitted
+  }
+}
+
+impl<T: Show> Show for Vec<T> {
+  // details omitted
+}
+
+// note: not real std lib things...
+```
+
+^
+- i love this one
+- teach tricks to generic types based on contents
+- monomorphization means each Vec concrete type is actually different
+- Vec learns contains when given something that is PartialEq
+- Vec learns sum when given something that is Add
+- Vec learns fmt when given something that is Show
+
+---
+
+# std::ops
+
+- Show: `fmt()`
+- Eq: `==`
+- PartialEq: `eq(), ne()`
+- Ord: `cmp()`
+- PartialOrd: `>=, <=, >, <`
+- Add: `+`
+- Deref: unary `*`
+- Index: `[]`
+
+![right](./images/std_ops.png)
+
+^
+- many, many std lib traits
+- many of these are on most built-ins
+- used to implement operators
+- properties to rely on
+- deref works on custom wrappers
+
+---
+
+# Kinds
+
+- Copy: `memcpy` friendly
+- Sized: compile-time known size
+- Sync: threadsafe
+- Send: cross task boundary
+
+![](./images/schematic.jpg)
+
+^
+- special traits
+- used by compiler to enforce rules
+- no methods implemented for these
+
+---
+
+# Copy vs Clone
+
+Copy
+- implicitly copyable
+- compiler driven
+- copy the bits
+
+Clone
+- manually cloneable
+- explicit `.clone()` call
+- create a new thing
+
+^
+- two similar traits
+
+---
+
+#[fit] Assignment Operator Revisited
+
+```rust
+fn main() {
+  // u32 implements Copy
+  let a = 100u32;
+
+  let b = a;
+  // b is a new copy
+
+  // Coffee does _not_  impl Copy
+  let c = Coffee::Hot(212);
+
+  let d = c;
+  // ownership of existing Coffee *moved* to d
+}
+```
+
+^
+- double duty assignment operator!
+- for me, this was a "clouds part" moment
+- Refs are Copy, Box are not -> BOOM!
+
+---
+
+#[fit] ~~~Assignment Operator~~~ Name Binding Revisited
+
+```rust
+fn main() {
+  // (u32,u32,u32) implements Copy
+  let a = (0u32, 2, 5);
+
+  // when x is bound, it is *copied*
+  let b = match a {
+    (x,_,_) if x > 0 => x * x,
+    (_,x,_) if x > 0 => x * x,
+    (_,_,x) if x > 0 => x * x,
+    _ => 0
+  };
+
+  println!("a: {}, b: {}", a, b);
+}
+```
+
+^
+- it's not the assignment operator, it's binding a name that is the action!
+- if this was *not* copied, it would be an error
+- like this:
+
+---
+
+#[fit] Name Binding Revisited
+
+```rust
+fn main() {
+  let cup = Coffee::Hot(150);
+
+  // ownership of the coffee is moved
+  let microwaved = match cup {
+    Coffee::Hot(x) if x < 130 => Coffee::Hot(200),
+    hot @ Coffee::Hot(_) => hot,
+    _ => Coffee::Hot(212),
+  };
+
+  println!("cup: {}, microwaved: {}", cup, microwaved);
+  // => error: use of moved value: `cup`
+}
+```
+
+^
+- so when does the move actually take place?
+- play with this a bit and you find that
+- the RHS is the "move from"
+- the LHS is the "move to"
+- in match, the use of the original is the "move from"
+- the binding of the whole form is the "move to"
+- many matches would drop the original
 
 ---
 
@@ -1894,46 +2101,6 @@ Queue Item: 44
 - it should at least provide a priority_iter()
 - turns out not *everything* is caught at compile time
 - you can collect it into a sorted vector
-
----
-
-# Common Traits
-
-- `std::ops::*`
-- `Show: to_string()`
-- `Eq: ==`
-- `PartialEq: eq(), ne()`
-- `Equiv: equiv()`
-- `Ord: cmp()`
-- `PartialOrd: >=, <=, >, <`
-- `Num, One, Zero, Float, Integer`
-- `Deref: unary *`
-
-![right](./images/std_ops.png)
-
-^
-- many, many std lib traits
-- many of these are on most built-ins
-- used to implement operators
-- std::ops
-- properties to rely on
-- deref works on custom wrappers
-
----
-
-# Kinds
-
-- `Copy`: memcpy friendly `.clone()`
-- `Sized`: compile-time sized
-- `Sync`: threadsafe
-- `Send`: cross task boundary
-
-![](./images/schematic.jpg)
-
-^
-- used by compiler to enforce rules
-- marker traits
-- cross task boundary? 
 
 ---
 
